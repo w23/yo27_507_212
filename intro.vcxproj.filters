@@ -24,16 +24,10 @@
     <ClInclude Include="glext.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="music\4klang.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="timeline.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="blur_reflection.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="blur_reflection2.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="composite.h">
@@ -50,65 +44,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="music\4klang.inc">
-      <Filter>Заголовочные файлы</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="yo24.c">
+    <ClCompile Include="intro.c">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="music\4klang.obj" />
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="timeline.seq" />
     <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="yo24.asm">
+    <MASM Include="intro.asm">
       <Filter>Файлы исходного кода</Filter>
     </MASM>
   </ItemGroup>

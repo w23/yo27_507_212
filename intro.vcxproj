@@ -24,7 +24,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4697D2A5-0BA3-4305-960C-C1405D38894A}</ProjectGuid>
-    <RootNamespace>yo24</RootNamespace>
+    <RootNamespace>intro</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -159,19 +159,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="blur_reflection.h" />
-    <ClInclude Include="blur_reflection2.h" />
     <ClInclude Include="composite.h" />
     <ClInclude Include="dof_tap.h" />
     <ClInclude Include="glext.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="header_fixed.h" />
-    <ClInclude Include="music\4klang.h" />
     <ClInclude Include="post.h" />
     <ClInclude Include="raymarch.h" />
     <ClInclude Include="timeline.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="music\4klang.inc" />
     <CustomBuild Include="*.glsl">
       <FileType>Document</FileType>
       <Command>shader_minifier.exe -o %(Filename).h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main %(Identity)</Command>
@@ -207,7 +204,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
-    <MASM Include="yo24.asm">
+    <MASM Include="intro.asm">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -217,22 +214,13 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="yo24.c">
+    <ClCompile Include="intro.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="music\4klang.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">true</ExcludedFromBuild>
-    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
