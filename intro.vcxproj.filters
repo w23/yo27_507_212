@@ -51,10 +51,19 @@
   <ItemGroup>
     <CustomBuild Include="timeline.seq" />
     <CustomBuild Include="*.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="intro.asm">
-      <Filter>Файлы исходного кода</Filter>
-    </MASM>
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
   </ItemGroup>
 </Project>

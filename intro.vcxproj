@@ -9,16 +9,12 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseFastShaderDebug|Win32">
-      <Configuration>ReleaseFastShaderDebug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseFast|Win32">
-      <Configuration>ReleaseFast</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSlow|Win32">
+      <Configuration>ReleaseSlow</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -34,6 +30,13 @@
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -41,21 +44,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
@@ -73,12 +62,12 @@
     <Import Project="LibsGLandMM.props" />
     <Import Project="NoCRT.props" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="LibsGLandMM.props" />
     <Import Project="CrinklerSlow.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="LibsGLandMM.props" />
     <Import Project="CrinklerFast.props" />
@@ -88,16 +77,10 @@
     <Import Project="LibsGLandMM.props" />
     <Import Project="CrinklerFast.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="LibsGLandMM.props" />
-    <Import Project="CrinklerFast.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -110,7 +93,7 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>FULLSCREEN=1;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -120,7 +103,7 @@
     <ProjectReference />
     <Link />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>FULLSCREEN=1;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -147,16 +130,6 @@
       <AdditionalDependencies>ucrt.lib;vcruntime.lib;msvcrt.lib;opengl32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>SHADER_DEBUG=1;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>/QIfist %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link />
-    <ProjectReference />
-    <Link />
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="blur_reflection.h" />
     <ClInclude Include="composite.h" />
@@ -178,48 +151,34 @@
     </CustomBuild>
     <CustomBuild Include="timeline.seq">
       <FileType>Document</FileType>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">%(Filename).h</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">false</LinkObjects>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">%(Filename).h</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">timepack_Release\timepack.exe %(Identity) %(Filename).h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">false</LinkObjects>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">timepack_Release\timepack.exe;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
-    <MASM Include="intro.asm">
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">true</ExcludedFromBuild>
-    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="intro.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFastShaderDebug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseFast|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

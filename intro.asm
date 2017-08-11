@@ -1,29 +1,44 @@
-.686
-.model flat, stdcall
-.stack 4096
+BITS 32
+global _entrypoint
 
-externdef C ExitProcess@4:proc
-externdef C ShowCursor@4:proc
-externdef C CreateWindowExA@48:proc
-externdef C GetDC@4:proc
-externdef C ChoosePixelFormat@8:proc
-externdef C SetPixelFormat@12:proc
-externdef C wglCreateContext@4:proc
-externdef C wglMakeCurrent@8:proc
-externdef C wglGetProcAddress@4:proc
-externdef C timeGetTime@0:proc
-externdef C glClearColor@16:proc
-externdef C glClear@4:proc
-externdef C SwapBuffers@4:proc
-externdef C PeekMessageA@20:proc
-externdef C GetAsyncKeyState@4:proc
+%define WIDTH 1280
+%define HEIGHT	720
+%define FULLSCREEN 0
 
-;FUNC_OFFSETS
+%define ExitProcess _ExitProcess@4
+%define ShowCursor _ShowCursor@4
+%define CreateWindowExA _CreateWindowExA@48
+%define GetDC _GetDC@4
+%define ChoosePixelFormat _ChoosePixelFormat@8
+%define SetPixelFormat _SetPixelFormat@12
+%define wglCreateContext _wglCreateContext@4
+%define wglMakeCurrent _wglMakeCurrent@8
+%define wglGetProcAddress _wglGetProcAddress@4
+%define timeGetTime _timeGetTime@0
+%define glClearColor _glClearColor@16
+%define glClear _glClear@4
+%define SwapBuffers _SwapBuffers@4
+%define PeekMessageA _PeekMessageA@20
+%define GetAsyncKeyState _GetAsyncKeyState@4
 
-WIDTH_	EQU 1280
-HEIGHT	EQU 720
+extern ExitProcess
+extern ShowCursor
+extern CreateWindowExA
+extern GetDC
+extern ChoosePixelFormat
+extern SetPixelFormat
+extern wglCreateContext
+extern wglMakeCurrent
+extern wglGetProcAddress
+extern timeGetTime
+extern glClearColor
+extern glClear
+extern SwapBuffers
+extern PeekMessageA
+extern GetAsyncKeyState
 
-.data
+section .data
+%if 0
 IFDEF FUNC_OFFSETS
 	ExitProcess dd ExitProcess@4
 	ShowCursor dd ShowCursor@4
@@ -65,9 +80,10 @@ ELSE
 	call func
 ENDIF
 endm
+%endif
 
-
-pixelFormatDescriptor	DW	028H
+pixelFormatDescriptor:
+	DW	028H
 	DW	01H
 	DD	025H
 	DB	00H
@@ -93,7 +109,9 @@ pixelFormatDescriptor	DW	028H
 	DD	00H
 	DD	00H
 	DD	00H
-screenSettings DB 00H
+
+screenSettings:
+	DB 00H
 	DW	00H
 	DW	00H
 	DW	09cH
@@ -108,7 +126,7 @@ screenSettings DB 00H
 	DB	00H
 	DW	00H
 	DD	020H
-	DD	WIDTH_
+	DD	WIDTH
 	DD	HEIGHT
 	DD	00H
 	DD	00H
@@ -121,8 +139,10 @@ screenSettings DB 00H
 	DD	00H
 	DD	00H
 
-	static db "static", 0
+static:
+	db "static", 0
 
+%if 0
 IFDEF SEPARATE_STACK
 	ShowCursor_args	dd 0
 	CreateWindowExA_args dd 0
@@ -131,7 +151,7 @@ IFDEF SEPARATE_STACK
 		dd 0
 		dd 90000000H
 		dd 0, 0
-		dd WIDTH_
+		dd WIDTH
 		dd HEIGHT
 		dd 0, 0, 0, 0
 	ChoosePixelFormat_args dd pixelFormatDescriptor
@@ -142,10 +162,12 @@ ENDIF
 
 .data?
 ;bss_begin: dd ?
+%endif
 
-.code
-entrypoint proc
+section .code
+_entrypoint:
 	;mov ebp, OFFSET ExitProcess
+%if 0
 IFDEF SEPARATE_STACK
 	mov ecx, Args_end - ShowCursor_args
 	sub esp, ecx
@@ -153,14 +175,15 @@ IFDEF SEPARATE_STACK
 	mov esi, OFFSET ShowCursor_args
 	rep movsb
 ELSE
+%endif
 	xor eax, eax
-	mov ebx, WIDTH_
+	mov ebx, WIDTH
 	mov ecx, HEIGHT
 ;	mov edx, OFFSET static
 ; SetPixelFormat
-	push OFFSET pixelFormatDescriptor
+	push pixelFormatDescriptor
 ; ChoosePixelFormat
-	push OFFSET pixelFormatDescriptor
+	push pixelFormatDescriptor
 ; CreateWindowExA
 	push eax
 	push eax
@@ -172,11 +195,12 @@ ELSE
 	push eax
 	push 090000000H
 	push eax
-	push OFFSET static
+	push static
 	push eax
 ; ShowCursor
 	push eax
-ENDIF
+
+%define fcall call
 
 	fcall ShowCursor
 	fcall CreateWindowExA
@@ -206,11 +230,11 @@ mainloop:
 	fcall timeGetTime
 	sub eax, ebx
 	push eax
-	fild dword ptr [esp]
-	mov dword ptr [esp], 1000
-	fidiv dword ptr [esp]
+	fild dword [esp]
+	mov dword [esp], 1000
+	fidiv dword [esp]
 	fsin
-	fstp dword ptr [esp]
+	fstp dword [esp]
 	pop eax
 
 	push eax
@@ -229,7 +253,5 @@ mainloop:
 	fcall GetAsyncKeyState
 	jz mainloop
 
-exit:	
+exit:
 	fcall ExitProcess
-entrypoint endp
-end
