@@ -5,83 +5,35 @@ global _entrypoint
 %define HEIGHT	720
 %define FULLSCREEN 0
 
-%define ExitProcess _ExitProcess@4
-%define ShowCursor _ShowCursor@4
-%define CreateWindowExA _CreateWindowExA@48
-%define GetDC _GetDC@4
-%define ChoosePixelFormat _ChoosePixelFormat@8
-%define SetPixelFormat _SetPixelFormat@12
-%define wglCreateContext _wglCreateContext@4
-%define wglMakeCurrent _wglMakeCurrent@8
-%define wglGetProcAddress _wglGetProcAddress@4
-%define timeGetTime _timeGetTime@0
-%define glClearColor _glClearColor@16
-%define glClear _glClear@4
-%define SwapBuffers _SwapBuffers@4
-%define PeekMessageA _PeekMessageA@20
-%define GetAsyncKeyState _GetAsyncKeyState@4
+%macro WINAPI_FUNCLIST 0
+	WINAPI_FUNC(ExitProcess, 4)
+	WINAPI_FUNC(ShowCursor, 4)
+	WINAPI_FUNC(CreateWindowExA, 48)
+	WINAPI_FUNC(GetDC, 4)
+	WINAPI_FUNC(ChoosePixelFormat, 8)
+	WINAPI_FUNC(SetPixelFormat, 12)
+	WINAPI_FUNC(wglCreateContext, 4)
+	WINAPI_FUNC(wglMakeCurrent, 8)
+	WINAPI_FUNC(wglGetProcAddress, 4)
+	WINAPI_FUNC(timeGetTime, 0)
+	WINAPI_FUNC(glClearColor, 16)
+	WINAPI_FUNC(glClear, 4)
+	WINAPI_FUNC(SwapBuffers, 4)
+	WINAPI_FUNC(PeekMessageA, 20)
+	WINAPI_FUNC(GetAsyncKeyState, 4)
+%endmacro
 
-extern ExitProcess
-extern ShowCursor
-extern CreateWindowExA
-extern GetDC
-extern ChoosePixelFormat
-extern SetPixelFormat
-extern wglCreateContext
-extern wglMakeCurrent
-extern wglGetProcAddress
-extern timeGetTime
-extern glClearColor
-extern glClear
-extern SwapBuffers
-extern PeekMessageA
-extern GetAsyncKeyState
+%define WINAPI_FUNC(f, s) \
+	extern _ %+ f %+ @ %+ s
 
-section .data
-%if 0
-IFDEF FUNC_OFFSETS
-	ExitProcess dd ExitProcess@4
-	ShowCursor dd ShowCursor@4
-	CreateWindowExA dd CreateWindowExA@48
-	GetDC dd GetDC@4
-	ChoosePixelFormat dd ChoosePixelFormat@8
-	SetPixelFormat dd SetPixelFormat@12
-	wglCreateContext dd wglCreateContext@4
-	wglMakeCurrent dd wglMakeCurrent@8
-	wglGetProcAddress dd wglGetProcAddress@4
-	timeGetTime dd timeGetTime@0
-	glClearColor dd glClearColor@16
-	glClear dd glClear@4
-	SwapBuffers dd SwapBuffers@4
-	PeekMessageA dd PeekMessageA@20
-	GetAsyncKeyState dd GetAsyncKeyState@4
-ELSE
-	ExitProcess EQU ExitProcess@4
-	ShowCursor EQU ShowCursor@4
-	CreateWindowExA EQU CreateWindowExA@48
-	GetDC EQU GetDC@4
-	ChoosePixelFormat EQU ChoosePixelFormat@8
-	SetPixelFormat EQU SetPixelFormat@12
-	wglCreateContext EQU wglCreateContext@4
-	wglMakeCurrent EQU wglMakeCurrent@8
-	wglGetProcAddress EQU wglGetProcAddress@4
-	timeGetTime EQU timeGetTime@0
-	glClearColor EQU glClearColor@16
-	glClear EQU glClear@4
-	SwapBuffers EQU SwapBuffers@4
-	PeekMessageA EQU PeekMessageA@20
-	GetAsyncKeyState EQU GetAsyncKeyState@4
-ENDIF
+WINAPI_FUNCLIST
 
-fcall MACRO func
-IFDEF FUNC_OFFSETS
-	call dword ptr [ebp + (func - ExitProcess)]
-ELSE
-	call func
-ENDIF
-endm
-%endif
+%define WINAPI_FUNC(f, s) \
+	f EQU _ %+ f %+ @ %+ s
 
+WINAPI_FUNCLIST
+
+section .data-pfd data
 pixelFormatDescriptor:
 	DW	028H
 	DW	01H
@@ -110,6 +62,7 @@ pixelFormatDescriptor:
 	DD	00H
 	DD	00H
 
+section .data-scrstt data
 screenSettings:
 	DB 00H
 	DW	00H
@@ -139,43 +92,134 @@ screenSettings:
 	DD	00H
 	DD	00H
 
+section .data-static data
 static:
 	db "static", 0
 
-%if 0
-IFDEF SEPARATE_STACK
-	ShowCursor_args	dd 0
-	CreateWindowExA_args dd 0
-		;dd 0C018H
-		dd static
-		dd 0
-		dd 90000000H
-		dd 0, 0
-		dd WIDTH
-		dd HEIGHT
-		dd 0, 0, 0, 0
-	ChoosePixelFormat_args dd pixelFormatDescriptor
-	SetPixelFormat_args dd pixelFormatDescriptor
-	Args_end db ?
-ELSE
-ENDIF
+Op_PushImm EQU 0
+Op_PushBigConst EQU 1
+Op_PushMem EQU 2
+Op_PopMem EQU 3
+Op_Pop EQU 4
+Op_Dup EQU 5
+Op_Call EQU 6
 
-.data?
-;bss_begin: dd ?
-%endif
+section .data-vm-bigconst data
+vm_big_const:
+	dd pixelFormatDescriptor
+	dd WIDTH
+	dd HEIGHT
+	dd 090000000H
+	dd static
 
-section .code
+%macro vmprog 0
+	OP(Op_PushBigConst, 0)
+	OP(Op_PushBigConst, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushBigConst, 2)
+	OP(Op_PushBigConst, 1)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushBigConst, 3)
+	OP(Op_PushImm, 0)
+	OP(Op_PushBigConst, 4)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_Call, 1)
+	OP(Op_Call, 2)
+	OP(Op_Dup, 0)
+	OP(Op_Call, 3)
+	OP(Op_Dup, 0)
+	OP(Op_PopMem, 0)
+	OP(Op_Call, 4)
+	OP(Op_PushMem, 0)
+	OP(Op_Call, 5)
+	OP(Op_PushMem, 0)
+	OP(Op_PushMem, 0)
+	OP(Op_Call, 6)
+	OP(Op_PushMem, 0)
+	OP(Op_Call, 7)
+	OP(Op_Call, 0)
+%endmacro
+
+section .code-ops data align 1
+entry_ops:
+%define OP(o, a) db o
+vmprog
+
+section .code-args data align 1
+entry_args:
+%define OP(o, a) db a
+vmprog
+
+section .code-mem bss
+entry_mem: resb 256
+
+section .data-vm-procs data
+vm_procs:
+%define WINAPI_FUNC(f, s) \
+	dd _ %+ f %+ @ %+ s
+WINAPI_FUNCLIST
+
+section .data-vm-opcode-ptrs data
+opcodes:
+	dd op_push_imm
+	dd op_push_big_const
+	dd op_push_mem
+	dd op_pop_mem
+	dd op_pop
+	dd op_dup
+	dd op_call
+
+section .code-vm-ops text
+default abs
+op_push_imm:
+	push eax
+	jmp vmrun
+op_push_big_const:
+	push dword [vm_big_const + eax * 4]
+	jmp vmrun
+op_push_mem:
+	push dword [ebp + eax * 4]
+	jmp vmrun
+op_pop_mem:
+	pop ecx
+	mov [ebp + eax * 4], ecx
+	jmp vmrun
+op_pop:
+	pop ecx
+	jmp vmrun
+op_dup:
+	pop ecx
+	push ecx
+	push ecx
+	jmp vmrun
+op_call:
+	call [vm_procs + eax * 4]
+	mov dword [esp], eax
+	jmp vmrun
+
+section .code-vmrun text
+	; esi -- next op code (u8)
+	; edi -- next op imm arg (u8)
+	; ebp -- memory
+vmrun:
+	movzx eax, byte [edi]
+	movzx ecx, byte [esi]
+	inc edi
+	inc esi
+	jmp [opcodes + 4 * ecx]
+
+section .code-entrypoint text
 _entrypoint:
-	;mov ebp, OFFSET ExitProcess
+	mov esi, entry_ops
+	mov edi, entry_args
+	mov ebp, entry_mem
+	jmp vmrun
 %if 0
-IFDEF SEPARATE_STACK
-	mov ecx, Args_end - ShowCursor_args
-	sub esp, ecx
-	mov edi, esp
-	mov esi, OFFSET ShowCursor_args
-	rep movsb
-ELSE
-%endif
 	xor eax, eax
 	mov ebx, WIDTH
 	mov ecx, HEIGHT
@@ -255,3 +299,4 @@ mainloop:
 
 exit:
 	fcall ExitProcess
+%endif
