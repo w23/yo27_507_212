@@ -4,6 +4,8 @@ global _entrypoint
 %define WIDTH 1280
 %define HEIGHT	720
 %define FULLSCREEN 0
+%define NOISE_SIZE 256
+%define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
 %macro WINAPI_FUNCLIST 0
 	WINAPI_FUNC ExitProcess, 4
@@ -18,6 +20,11 @@ global _entrypoint
 	WINAPI_FUNC SwapBuffers, 4
 	WINAPI_FUNC PeekMessageA, 20
 	WINAPI_FUNC GetAsyncKeyState, 4
+	WINAPI_FUNC glGenTextures, 8
+	WINAPI_FUNC glBindTexture, 8
+	WINAPI_FUNC glTexImage2D, 36
+	WINAPI_FUNC glTexParameteri, 12
+	WINAPI_FUNC glRects, 16
 %endmacro
 
 %macro WINAPI_FUNC 2
@@ -66,6 +73,9 @@ gl_procs:
 %endmacro
 GL_FUNCLIST
 %unmacro GL_FUNC 1
+
+section .bss-noise bss
+noise: resb NOISE_SIZE_BYTES
 
 section .data-pfd data
 pixelFormatDescriptor:
@@ -142,6 +152,8 @@ vm_big_const:
 
 	OP(Op_PushBigConst, 6)
 	OP(Op_Jmp, 0)
+
+
 
 	OP(Op_PushBigConst, 5)
 	OP(Op_Jmp, 0)
@@ -266,6 +278,46 @@ gl_proc_skip_until_zero:
 	jnz gl_proc_skip_until_zero
 	cmp [esi], al
 	jnz gl_proc_loader_loop
+
+generate_noise:
+%if 1
+	xor eax, eax
+	mov ebx, noise
+	mov ecx, NOISE_SIZE_BYTES
+noise_loop:
+	imul eax, eax, 0x19660d
+	add eax, 0x3c6ef35f
+	mov edx, eax
+	shr edx, 12
+	mov [noise + ecx], dl
+	loop noise_loop
+%else
+	xor ecx, ecx
+	xor edx, edx
+;8B CD MOV ECX, EBP
+;8B D5 MOV EDX, EBP
+noise_loop:
+	IMUL ECX, ECX, 0x19660D
+	ADD ECX, 0x3C6EF35F
+	MOV EAX, ECX
+	SHR EAX, 0x12
+	MOV [EDX+noise], AL
+	INC EDX
+	CMP EDX, NOISE_SIZE_BYTES
+	JL noise_loop
+%endif
+
+%if 0
+	push main_mem + 8
+	push 7
+	call _glGenTextures@8
+
+	push main_mem + 8 + 7 * 4
+	push 6
+	call glGenFramebuffers
+%endif
+
+return_to_bytecode:
 	popad
 	jmp [vmrun_ptr]
 
