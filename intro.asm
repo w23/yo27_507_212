@@ -6,91 +6,61 @@ global _entrypoint
 %define FULLSCREEN 0
 
 %macro WINAPI_FUNCLIST 0
-	WINAPI_FUNC(ExitProcess, 4)
-	WINAPI_FUNC(ShowCursor, 4)
-	WINAPI_FUNC(CreateWindowExA, 48)
-	WINAPI_FUNC(GetDC, 4)
-	WINAPI_FUNC(ChoosePixelFormat, 8)
-	WINAPI_FUNC(SetPixelFormat, 12)
-	WINAPI_FUNC(wglCreateContext, 4)
-	WINAPI_FUNC(wglMakeCurrent, 8)
-	WINAPI_FUNC(wglGetProcAddress, 4)
-	WINAPI_FUNC(timeGetTime, 0)
-	WINAPI_FUNC(glClearColor, 16)
-	WINAPI_FUNC(glClear, 4)
-	WINAPI_FUNC(SwapBuffers, 4)
-	WINAPI_FUNC(PeekMessageA, 20)
-	WINAPI_FUNC(GetAsyncKeyState, 4)
+	WINAPI_FUNC ExitProcess, 4
+	WINAPI_FUNC ShowCursor, 4
+	WINAPI_FUNC CreateWindowExA, 48
+	WINAPI_FUNC GetDC, 4
+	WINAPI_FUNC ChoosePixelFormat, 8
+	WINAPI_FUNC SetPixelFormat, 12
+	WINAPI_FUNC wglCreateContext, 4
+	WINAPI_FUNC wglMakeCurrent, 8
+	WINAPI_FUNC wglGetProcAddress, 4
+	WINAPI_FUNC timeGetTime, 0
+	WINAPI_FUNC glClearColor, 16
+	WINAPI_FUNC glClear, 4
+	WINAPI_FUNC SwapBuffers, 4
+	WINAPI_FUNC PeekMessageA, 20
+	WINAPI_FUNC GetAsyncKeyState, 4
 %endmacro
 
-%define WINAPI_FUNC(f, s) \
-	extern _ %+ f %+ @ %+ s
-
+%macro WINAPI_FUNC 2
+	extern _ %+ %1 %+ @ %+ %2
+%endmacro
 WINAPI_FUNCLIST
+%unmacro WINAPI_FUNC 2
 
-%define WINAPI_FUNC(f, s) \
-	f EQU _ %+ f %+ @ %+ s
-
+section .data-vm-procs data
+vm_procs:
+%macro WINAPI_FUNC 2
+%1 %+ _:
+  %1 EQU ($-$$)/4
+	dd _ %+ %1 %+ @ %+ %2
+%endmacro
 WINAPI_FUNCLIST
+%unmacro WINAPI_FUNC 2
+
+;%define WINAPI_FUNC(f, s) \
+;	f EQU _ %+ f %+ @ %+ s
+;WINAPI_FUNCLIST
 
 section .data-pfd data
 pixelFormatDescriptor:
-	DW	028H
-	DW	01H
+	DW	028H,	01H
 	DD	025H
-	DB	00H
-	DB	020H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	08H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	020H
-	DB	00H
-	DB	00H
-	DB	00H
-	DB	00H
-	DD	00H
-	DD	00H
-	DD	00H
+	DB	00H, 020H, 00H, 00H, 00H, 00H, 00H, 00H, 08H, 00H, 00H, 00H, 00H, 00H
+	DB	00H, 020H, 00H, 00H, 00H, 00H
+	DD	00H, 00H, 00H
 
 section .data-scrstt data
 screenSettings:
-	DB 00H
-	DW	00H
-	DW	00H
-	DW	09cH
-	DW	00H
+	DB	00H
+	DW	00H, 00H, 09cH, 00H
 	DD	01c0000H
-	DW	00H
-	DW	00H
-	DW	00H
-	DW	00H
-	DW	00H
-	DW	00H
+	DW	00H, 00H, 00H, 00H, 00H, 00H
 	DB	00H
 	DW	00H
-	DD	020H
-	DD	WIDTH
-	DD	HEIGHT
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
-	DD	00H
+	DD	020H, WIDTH, HEIGHT
+	times 10 dd 0
 
 section .data-static data
 static:
@@ -103,6 +73,8 @@ Op_PopMem EQU 3
 Op_Pop EQU 4
 Op_Dup EQU 5
 Op_Call EQU 6
+Op_CallPush EQU 7
+Op_Jmp EQU 8
 
 section .data-vm-bigconst data
 vm_big_const:
@@ -111,8 +83,10 @@ vm_big_const:
 	dd HEIGHT
 	dd 090000000H
 	dd static
+	dd mainloop
+	dd 000004000H
 
-%macro vmprog 0
+%macro entry_prog 0
 	OP(Op_PushBigConst, 0)
 	OP(Op_PushBigConst, 0)
 	OP(Op_PushImm, 0)
@@ -128,41 +102,60 @@ vm_big_const:
 	OP(Op_PushBigConst, 4)
 	OP(Op_PushImm, 0)
 	OP(Op_PushImm, 0)
-	OP(Op_Call, 1)
-	OP(Op_Call, 2)
-	OP(Op_Dup, 0)
-	OP(Op_Call, 3)
+	OP(Op_Call, ShowCursor)
+	OP(Op_CallPush, CreateWindowExA)
+	OP(Op_CallPush, GetDC)
 	OP(Op_Dup, 0)
 	OP(Op_PopMem, 0)
-	OP(Op_Call, 4)
+	OP(Op_CallPush, ChoosePixelFormat)
 	OP(Op_PushMem, 0)
-	OP(Op_Call, 5)
+	OP(Op_Call, SetPixelFormat)
 	OP(Op_PushMem, 0)
 	OP(Op_PushMem, 0)
-	OP(Op_Call, 6)
+	OP(Op_CallPush, wglCreateContext)
 	OP(Op_PushMem, 0)
-	OP(Op_Call, 7)
-	OP(Op_Call, 0)
+	OP(Op_Call, wglMakeCurrent)
+	OP(Op_PushBigConst, 5)
+	OP(Op_Jmp, 0)
 %endmacro
 
-section .code-ops data align 1
+%macro mainloop_prog 0
+	OP(Op_PushBigConst, 6)
+	OP(Op_Call, glClear)
+	OP(Op_PushMem, 0)
+	OP(Op_Call, SwapBuffers)
+	OP(Op_PushImm, 1)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_Call, PeekMessageA)
+	OP(Op_PushBigConst, 5)
+	OP(Op_Jmp, 0)
+%endmacro
+
+section .code-entry-ops data align 1
 entry_ops:
 %define OP(o, a) db o
-vmprog
+entry_prog
 
-section .code-args data align 1
+section .code-entry-args data align 1
 entry_args:
 %define OP(o, a) db a
-vmprog
+entry_prog
+
+section .code-mainloop-ops data align 1
+mainloop_ops:
+%define OP(o, a) db o
+mainloop_prog
+
+section .code-mainloop-args data align 1
+mainloop_args:
+%define OP(o, a) db a
+mainloop_prog
 
 section .code-mem bss
-entry_mem: resb 256
-
-section .data-vm-procs data
-vm_procs:
-%define WINAPI_FUNC(f, s) \
-	dd _ %+ f %+ @ %+ s
-WINAPI_FUNCLIST
+main_mem: resb 256
 
 section .data-vm-opcode-ptrs data
 opcodes:
@@ -173,34 +166,46 @@ opcodes:
 	dd op_pop
 	dd op_dup
 	dd op_call
+	dd op_callpush
+	dd op_jmp
+
+section .data-vmrun-ptr data
+vmrun_ptr: dd vmrun
 
 section .code-vm-ops text
 default abs
 op_push_imm:
 	push eax
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_push_big_const:
 	push dword [vm_big_const + eax * 4]
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_push_mem:
 	push dword [ebp + eax * 4]
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_pop_mem:
 	pop ecx
 	mov [ebp + eax * 4], ecx
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_pop:
 	pop ecx
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_dup:
 	pop ecx
 	push ecx
 	push ecx
-	jmp vmrun
+	jmp [vmrun_ptr]
 op_call:
 	call [vm_procs + eax * 4]
-	mov dword [esp], eax
-	jmp vmrun
+	jmp [vmrun_ptr]
+op_callpush:
+	call [vm_procs + eax * 4]
+	push eax
+	;mov dword [esp], eax
+	jmp [vmrun_ptr]
+op_jmp:
+	pop eax
+	jmp eax
 
 section .code-vmrun text
 	; esi -- next op code (u8)
@@ -217,8 +222,21 @@ section .code-entrypoint text
 _entrypoint:
 	mov esi, entry_ops
 	mov edi, entry_args
-	mov ebp, entry_mem
+	mov ebp, main_mem
 	jmp vmrun
+
+mainloop:
+	push 01bH
+	call [GetAsyncKeyState_]
+	jz mainloop_do
+	call [ExitProcess_]
+
+mainloop_do:
+	mov esi, mainloop_ops
+	mov edi, mainloop_args
+	mov ebp, main_mem
+	jmp vmrun
+
 %if 0
 	xor eax, eax
 	mov ebx, WIDTH
