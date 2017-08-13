@@ -15,9 +15,6 @@ global _entrypoint
 	WINAPI_FUNC wglCreateContext, 4
 	WINAPI_FUNC wglMakeCurrent, 8
 	WINAPI_FUNC wglGetProcAddress, 4
-	WINAPI_FUNC timeGetTime, 0
-	WINAPI_FUNC glClearColor, 16
-	WINAPI_FUNC glClear, 4
 	WINAPI_FUNC SwapBuffers, 4
 	WINAPI_FUNC PeekMessageA, 20
 	WINAPI_FUNC GetAsyncKeyState, 4
@@ -29,6 +26,29 @@ global _entrypoint
 WINAPI_FUNCLIST
 %unmacro WINAPI_FUNC 2
 
+%macro GL_FUNCLIST 0
+	GL_FUNC glCreateShaderProgramv
+	GL_FUNC glUseProgram
+	GL_FUNC glGetUniformLocation
+	GL_FUNC glUniform1iv
+	GL_FUNC glUniform1fv
+	GL_FUNC glGenFramebuffers
+	GL_FUNC glBindFramebuffer
+	GL_FUNC glFramebufferTexture2D
+	GL_FUNC glDrawBuffers
+	GL_FUNC glActiveTexture
+%endmacro
+
+section .data-gl-strings data align=1
+gl_proc_names:
+%macro GL_FUNC 1
+%defstr %[%1 %+ __str] %1
+	db %1 %+ __str, 0
+%endmacro
+GL_FUNCLIST
+%unmacro GL_FUNC 1
+	db 0
+
 section .data-vm-procs data
 vm_procs:
 %macro WINAPI_FUNC 2
@@ -38,10 +58,14 @@ vm_procs:
 %endmacro
 WINAPI_FUNCLIST
 %unmacro WINAPI_FUNC 2
-
-;%define WINAPI_FUNC(f, s) \
-;	f EQU _ %+ f %+ @ %+ s
-;WINAPI_FUNCLIST
+gl_procs:
+%macro GL_FUNC 1
+%1 %+ _:
+	%1 EQU ($-$$)/4
+	dd 0
+%endmacro
+GL_FUNCLIST
+%unmacro GL_FUNC 1
 
 section .data-pfd data
 pixelFormatDescriptor:
@@ -84,7 +108,7 @@ vm_big_const:
 	dd 090000000H
 	dd static
 	dd mainloop
-	dd 000004000H
+	dd gl_proc_loader
 
 %macro entry_prog 0
 	OP(Op_PushBigConst, 0)
@@ -115,13 +139,15 @@ vm_big_const:
 	OP(Op_CallPush, wglCreateContext)
 	OP(Op_PushMem, 0)
 	OP(Op_Call, wglMakeCurrent)
+
+	OP(Op_PushBigConst, 6)
+	OP(Op_Jmp, 0)
+
 	OP(Op_PushBigConst, 5)
 	OP(Op_Jmp, 0)
 %endmacro
 
 %macro mainloop_prog 0
-	OP(Op_PushBigConst, 6)
-	OP(Op_Call, glClear)
 	OP(Op_PushMem, 0)
 	OP(Op_Call, SwapBuffers)
 	OP(Op_PushImm, 1)
@@ -134,22 +160,20 @@ vm_big_const:
 	OP(Op_Jmp, 0)
 %endmacro
 
-section .code-entry-ops data align 1
+section .code-entry-ops data align=1
 entry_ops:
 %define OP(o, a) db o
 entry_prog
-
-section .code-entry-args data align 1
+section .code-entry-args data align=1
 entry_args:
 %define OP(o, a) db a
 entry_prog
 
-section .code-mainloop-ops data align 1
+section .code-mainloop-ops data align=1
 mainloop_ops:
 %define OP(o, a) db o
 mainloop_prog
-
-section .code-mainloop-args data align 1
+section .code-mainloop-args data align=1
 mainloop_args:
 %define OP(o, a) db a
 mainloop_prog
@@ -172,7 +196,7 @@ opcodes:
 section .data-vmrun-ptr data
 vmrun_ptr: dd vmrun
 
-section .code-vm-ops text
+section .code-vm-ops text align=1
 default abs
 op_push_imm:
 	push eax
@@ -207,114 +231,53 @@ op_jmp:
 	pop eax
 	jmp eax
 
-section .code-vmrun text
+section .code-vmrun text align=1
 	; esi -- next op code (u8)
 	; edi -- next op imm arg (u8)
 	; ebp -- memory
 vmrun:
 	movzx eax, byte [edi]
 	movzx ecx, byte [esi]
-	inc edi
 	inc esi
+	inc edi
 	jmp [opcodes + 4 * ecx]
 
-section .code-entrypoint text
+section .code-entrypoint text align=1
 _entrypoint:
 	mov esi, entry_ops
 	mov edi, entry_args
 	mov ebp, main_mem
-	jmp vmrun
+	jmp [vmrun_ptr]
 
+;section .code-gl-proc-loader text align=1
+gl_proc_loader:
+	pushad
+	mov esi, gl_proc_names
+	mov ebx, gl_procs
+gl_proc_loader_loop:
+	push esi
+	call _wglGetProcAddress@4
+	mov [ebx], eax
+	lea ebx, [ebx + 4]
+gl_proc_skip_until_zero:
+	mov al, [esi]
+	inc esi
+	test al, al
+	jnz gl_proc_skip_until_zero
+	cmp [esi], al
+	jnz gl_proc_loader_loop
+	popad
+	jmp [vmrun_ptr]
+
+;section .code-mainloop text align=1
 mainloop:
-	push 01bH
-	call [GetAsyncKeyState_]
+	push 01bH ; TODO bytecode
+	call _GetAsyncKeyState@4
 	jz mainloop_do
-	call [ExitProcess_]
+	call _ExitProcess@4
 
 mainloop_do:
 	mov esi, mainloop_ops
 	mov edi, mainloop_args
 	mov ebp, main_mem
-	jmp vmrun
-
-%if 0
-	xor eax, eax
-	mov ebx, WIDTH
-	mov ecx, HEIGHT
-;	mov edx, OFFSET static
-; SetPixelFormat
-	push pixelFormatDescriptor
-; ChoosePixelFormat
-	push pixelFormatDescriptor
-; CreateWindowExA
-	push eax
-	push eax
-	push eax
-	push eax
-	push ecx
-	push ebx
-	push eax
-	push eax
-	push 090000000H
-	push eax
-	push static
-	push eax
-; ShowCursor
-	push eax
-
-%define fcall call
-
-	fcall ShowCursor
-	fcall CreateWindowExA
-	push eax
-	fcall GetDC
-	push eax
-	push eax
-	pop ebx
-	fcall ChoosePixelFormat
-	push eax
-	push ebx
-	fcall SetPixelFormat
-	push ebx
-	push ebx
-	fcall wglCreateContext
-	push eax
-	push ebx
-	fcall wglMakeCurrent
-
-	; TODO wglGetProcAddress
-
-	fcall timeGetTime
-	push ebx
-	mov ebx, eax
-
-mainloop:
-	fcall timeGetTime
-	sub eax, ebx
-	push eax
-	fild dword [esp]
-	mov dword [esp], 1000
-	fidiv dword [esp]
-	fsin
-	fstp dword [esp]
-	pop eax
-
-	push eax
-	push eax
-	push eax
-	push eax
-	fcall glClearColor
-	push 000004000H
-	fcall glClear
-
-	pop ebx
-	push ebx
-	push ebx
-	fcall SwapBuffers
-	push 01bH
-	fcall GetAsyncKeyState
-	jz mainloop
-
-exit:
-	fcall ExitProcess
-%endif
+	jmp [vmrun_ptr]
