@@ -19,4 +19,14 @@
       <Filter>Файлы исходного кода</Filter>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="blur_reflection.glsl" />
+    <None Include="composite.glsl" />
+    <None Include="dof_tap.glsl" />
+    <None Include="post.glsl" />
+    <None Include="raymarch.glsl" />
+    <None Include="header.inc">
+      <Filter>Заголовочные файлы</Filter>
+    </None>
+  </ItemGroup>
 </Project>

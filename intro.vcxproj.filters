@@ -44,26 +44,44 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="intro.c">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
+    <CustomBuild Include="timeline.seq" />
+    <CustomBuild Include="composite.glsl" />
+    <CustomBuild Include="dof_tap.glsl" />
+    <CustomBuild Include="header.glsl" />
+    <CustomBuild Include="out.glsl" />
+    <CustomBuild Include="post.glsl" />
+    <CustomBuild Include="raymarch.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="composite.glsl" />
+    <CustomBuild Include="dof_tap.glsl" />
+    <CustomBuild Include="header.glsl" />
+    <CustomBuild Include="out.glsl" />
+    <CustomBuild Include="post.glsl" />
+    <CustomBuild Include="raymarch.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="*.glsl" />
+    <CustomBuild Include="blur_reflection.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="timeline.seq" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
-    <CustomBuild Include="*.glsl" />
+    <ClCompile Include="intro_c.c">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

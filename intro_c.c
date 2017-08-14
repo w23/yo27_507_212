@@ -6,7 +6,7 @@
 #endif
 //#define DO_RANGES
 
-#define SOUND
+//#define SOUND
 
 #ifdef _DEBUG
 #ifdef FULLSCREEN
@@ -91,6 +91,7 @@ int _fltused = 1;
 #define BAR_TICKS 32
 #define SAMPLES_PER_BAR (SOUND_SAMPLERATE * 4 * 60 / BPM)
 #define SAMPLES_PER_TICK (SAMPLES_PER_BAR / BAR_TICKS)
+#define MS_PER_TICK (SAMPLES_PER_TICK * 1000 / SOUND_SAMPLERATE)
 #define LENGTH_BARS 32
 
 #define SOUND_SAMPLES (SAMPLES_PER_BAR * LENGTH_BARS)
@@ -118,9 +119,6 @@ int _fltused = 1;
 
 #pragma data_seg(".blur_reflection.glsl")
 #include "blur_reflection.h"
-
-#pragma data_seg(".blur_reflection2.glsl")
-#include "blur_reflection2.h"
 
 #pragma data_seg(".composite.glsl")
 #include "composite.h"
@@ -178,6 +176,8 @@ static /*__forceinline*/ void timelineUpdate(float tick, float *TV) {
 #else
 #pragma data_seg(".timeline_packed")
 #pragma code_seg(".timeline_updater")
+
+#if 0
 
 static double fsin(double in) {
 	double result;
@@ -242,6 +242,12 @@ static void timelineUpdate(float tick, float *S) {
 	S[13] = (itick + 16) % BAR_TICKS == 0;
 	S[14] = 36;
 }
+#else
+static void timelineUpdate(float tick, float *S) {
+	for (int i = 0; i < 16; ++i)
+		S[i] = 5.f;
+}
+#endif
 
 #endif
 
@@ -383,7 +389,7 @@ static SAMPLE_TYPE lpSoundBuffer[MAX_SAMPLES * 2];
 
 enum {
 	Pass_Raymarch,
-	Pass_ReflectBlur1, Pass_ReflectBlur2, Pass_ReflectCombine,
+	Pass_ReflectBlur, Pass_ReflectCombine,
 	Pass_DofTap, Pass_Post,
 	Pass_COUNT
 };
@@ -391,14 +397,14 @@ enum {
 enum {
 	Tex_Random,
 	Tex_RaymarchPrimary, Tex_RaymarchReflect,
-	Tex_ReflectBlur1, Tex_ReflectBlur2,
+	Tex_ReflectBlur,
 	Tex_Combined,
 	Tex_DofNear, Tex_DofFar,
 	Tex_COUNT
 };
 
 const static GLuint samplers[Tex_COUNT] = {
-	0, 1, 2, 3, 4, 5, 6, 7
+	0, 1, 2, 3, 4, 5, 6
 };
 const static GLuint draw_buffers[2] = {
 	GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1
@@ -630,25 +636,21 @@ static __forceinline void introInit() {
 	oglActiveTexture(GL_TEXTURE2);
 	initTexture(texture[Tex_RaymarchReflect], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
 	oglActiveTexture(GL_TEXTURE3);
-	initTexture(texture[Tex_ReflectBlur1], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
+	initTexture(texture[Tex_ReflectBlur], XRES/2, YRES/2, GL_RGBA16F, GL_FLOAT, 0);
 	oglActiveTexture(GL_TEXTURE4);
-	initTexture(texture[Tex_ReflectBlur2], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
-	oglActiveTexture(GL_TEXTURE5);
 	initTexture(texture[Tex_Combined], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
+	oglActiveTexture(GL_TEXTURE5);
+	initTexture(texture[Tex_DofNear], XRES/2, YRES/2, GL_RGBA16F, GL_FLOAT, 0);
 	oglActiveTexture(GL_TEXTURE6);
-	initTexture(texture[Tex_DofNear], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
-	oglActiveTexture(GL_TEXTURE7);
-	initTexture(texture[Tex_DofFar], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
+	initTexture(texture[Tex_DofFar], XRES/2, YRES/2, GL_RGBA16F, GL_FLOAT, 0);
 
 	initFb(fb[Pass_Raymarch], texture[Tex_RaymarchPrimary], texture[Tex_RaymarchReflect]);
-	initFb(fb[Pass_ReflectBlur1], texture[Tex_ReflectBlur1], 0);
-	initFb(fb[Pass_ReflectBlur2], texture[Tex_ReflectBlur2], 0);
+	initFb(fb[Pass_ReflectBlur], texture[Tex_ReflectBlur], 0);
 	initFb(fb[Pass_ReflectCombine], texture[Tex_Combined], 0);
 	initFb(fb[Pass_DofTap], texture[Tex_DofNear], texture[Tex_DofFar]);
 
 	program[Pass_Raymarch] = compileProgram(raymarch_glsl);
-	program[Pass_ReflectBlur1] = compileProgram(blur_reflection_glsl);
-	program[Pass_ReflectBlur2] = compileProgram(blur_reflection2_glsl);
+	program[Pass_ReflectBlur] = compileProgram(blur_reflection_glsl);
 	program[Pass_ReflectCombine] = compileProgram(composite_glsl);
 	program[Pass_DofTap] = compileProgram(dof_tap_glsl);
 	program[Pass_Post] = compileProgram(post_glsl);
@@ -659,8 +661,7 @@ static __forceinline void introPaint(float time_tick) {
 	timelineUpdate(time_tick, signals);
 	signals[0] = time_tick / BAR_TICKS;
 	paint(program[Pass_Raymarch], fb[Pass_Raymarch], 2);
-	paint(program[Pass_ReflectBlur1], fb[Pass_ReflectBlur1], 1);
-	paint(program[Pass_ReflectBlur2], fb[Pass_ReflectBlur2], 1);
+	paint(program[Pass_ReflectBlur], fb[Pass_ReflectBlur], 1);
 	paint(program[Pass_ReflectCombine], fb[Pass_ReflectCombine], 1);
 	paint(program[Pass_DofTap], fb[Pass_DofTap], 2);
 	paint(program[Pass_Post], 0, 1);
@@ -732,7 +733,7 @@ void entrypoint(void) {
 		CHECK(waveOutGetPosition(hWaveOut, &mmtime, sizeof(mmtime)));
 		const float time_ticks = (float)mmtime.u.cb / (BYTES_PER_TICK);
 #else
-		const int time_ms = timeGetTime() - start;
+		const float time_ticks = (timeGetTime() - start) / MS_PER_TICK;
 #endif
 
 		introPaint(time_ticks);

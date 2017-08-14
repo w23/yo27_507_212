@@ -107,7 +107,93 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">$(Configuration)\%(Filename).obj</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\%(Filename).obj</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">raymarch.inc;blur_reflection.inc;composite.inc;dof_tap.inc;post.inc</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">raymarch.inc;blur_reflection.inc;composite.inc;dof_tap.inc;post.inc</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">raymarch.inc;blur_reflection.inc;composite.inc;dof_tap.inc;post.inc</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Assembling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Identity)</Message>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="blur_reflection.glsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+    <CustomBuild Include="composite.glsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+    <CustomBuild Include="dof_tap.glsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+    <CustomBuild Include="post.glsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+    <CustomBuild Include="raymarch.glsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --format nasm --preserve-externals -o %(Filename).inc %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).inc</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</LinkObjects>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).inc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="header.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

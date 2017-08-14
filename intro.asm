@@ -74,8 +74,18 @@ gl_procs:
 GL_FUNCLIST
 %unmacro GL_FUNC 1
 
-section .bnoise bss
-noise: resb NOISE_SIZE_BYTES
+section .dshead data
+%include "header.inc"
+section .dsraymarch data
+%include "raymarch.inc"
+section .dsblurr data
+%include "blur_reflection.inc"
+section .dscomposite data
+%include "composite.inc"
+section .dsdof data
+%include "dof_tap.inc"
+section .dspos data
+%include "post.inc"
 
 section .dpfd data
 pixelFormatDescriptor:
@@ -99,6 +109,13 @@ screenSettings:
 section .dstatic data
 static:
 	db "static", 0
+S_str:
+	db "S", 0
+F_str:
+	db "F", 0
+
+section .bnoise bss
+noise: resb NOISE_SIZE_BYTES
 
 Op_PushImm EQU 0
 Op_PushConst EQU 1
@@ -111,6 +128,35 @@ Op_CallPush EQU 7
 Op_Jmp EQU 8
 Op_AddImm EQU 9
 
+section .dsptrs data
+src_raymarch:
+	dd _header_glsl
+	dd _raymarch_glsl
+src_reflection_blur:
+	dd _header_glsl
+	dd _blur_reflection_glsl
+src_composite:
+	dd _header_glsl
+	dd _composite_glsl
+src_dof:
+	dd _header_glsl
+	dd _dof_tap_glsl
+src_post:
+	dd _header_glsl
+	dd _post_glsl
+
+section .ddrwbuf data
+draw_buffers:
+	dd 0x8ce0, 0x8ce1
+
+section .dsmplrs data
+samplers:
+	dd 0, 1, 2, 3, 4, 5, 6
+
+section .bsignals data
+signals:
+	times 32 dd 5.0
+
 section .dvmconst data
 vm_big_const:
 %macro declare_const 0
@@ -122,12 +168,23 @@ vm_big_const:
 	CONST pfd, pixelFormatDescriptor
 	CONST winflags, 090000000H
 	CONST static, static
+	CONST S, S_str
+	CONST F, F_str
+	CONST draw_buffers, draw_buffers
+	CONST samplers, samplers
+	CONST signals, signals
 	CONST noise, noise
 	CONST mainloop, mainloop
 	CONST gl_proc_loader, gl_proc_loader
 	CONST tex_slots, tex_noise
 	CONST fb_slots, fb_raymarch
+	CONST src_raymarch, src_raymarch
+	CONST src_reflection_blur, src_reflection_blur
+	CONST src_composite, src_composite
+	CONST src_dof, src_dof
+	CONST src_post, src_post
 	CONST GL_TEXTURE_2D, 0x0de1
+	CONST GL_FRAGMENT_SHADER, 0x8b30
 	CONST GL_UNSIGNED_BYTE, 0x1401
 	CONST GL_FLOAT, 0x1406
 	CONST GL_RGBA, 0x1908
@@ -161,7 +218,7 @@ main_mem:
 	MEMVAR fb_composite
 	MEMVAR fb_dof
 	MEMVAR prog_raymarch
-	MEMVAR prog_reflect_blur
+	MEMVAR prog_reflection_blur
 	MEMVAR prog_composite
 	MEMVAR prog_dof
 	MEMVAR prog_post
@@ -221,6 +278,14 @@ declare_main_mem
 %endif
 %endmacro
 
+%macro compileProgram 2
+	OP(Op_PushConst, %2)
+	OP(Op_PushImm, 2)
+	OP(Op_PushConst, c_GL_FRAGMENT_SHADER)
+	OP(Op_CallPush, glCreateShaderProgramv)
+	OP(Op_PopMem, %1)
+%endmacro
+
 %macro entry_prog 0
 	OP(Op_PushConst, c_pfd)
 	OP(Op_PushConst, c_pfd)
@@ -254,6 +319,7 @@ declare_main_mem
 	OP(Op_PushConst, c_gl_proc_loader)
 	OP(Op_Jmp, 0)
 
+%if 1
 	OP(Op_PushConst, c_tex_slots)
 	OP(Op_PushImm, 7)
 	OP(Op_Call, glGenTextures)
@@ -266,10 +332,8 @@ declare_main_mem
 
 	OP(Op_PushConst, c_GL_TEXTURE1)
 	OP(Op_Dup, 0)
-
 	OP(Op_Call, glActiveTexture)
 	initTexture m_tex_raymarch_primary, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-
 	OP(Op_AddImm, 1)
 	OP(Op_Dup, 0)
 	OP(Op_Call, glActiveTexture)
@@ -296,22 +360,14 @@ declare_main_mem
 	initFb m_fb_composite, m_tex_composite, 0
 	initFb m_fb_dof, m_tex_dof_near, m_tex_dof_far
 
-%if 0
+	compileProgram m_prog_raymarch, c_src_raymarch
+	compileProgram m_prog_reflection_blur, c_src_reflection_blur
+	compileProgram m_prog_composite, c_src_composite
+	compileProgram m_prog_dof, c_src_dof
 %endif
 
-	OP(Op_PushConst, c_mainloop)
-	OP(Op_Jmp, 0)
-%endmacro
+	compileProgram m_prog_post, c_src_post
 
-%macro mainloop_prog 0
-	OP(Op_PushMem, m_hdc)
-	OP(Op_Call, SwapBuffers)
-	OP(Op_PushImm, 1)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_Call, PeekMessageA)
 	OP(Op_PushConst, c_mainloop)
 	OP(Op_Jmp, 0)
 %endmacro
@@ -324,6 +380,65 @@ section .dargentry data align=1
 entry_args:
 %define OP(o, a) db a
 entry_prog
+
+%macro paintPass 3
+%if %2 == 0
+	OP(Op_PushImm, 0)
+%else
+	OP(Op_PushMem, %2)
+%endif
+	OP(Op_PushConst, c_GL_FRAMEBUFFER)
+	OP(Op_Call, glBindFramebuffer)
+
+%if %2 != 0
+	OP(Op_PushConst, c_draw_buffers)
+	OP(Op_PushImm, %3)
+	OP(Op_Call, glDrawBuffers)
+%endif
+
+	OP(Op_PushMem, %1)
+	OP(Op_Call, glUseProgram)
+
+	OP(Op_PushConst, c_samplers)
+	OP(Op_PushImm, 7)
+	OP(Op_PushConst, c_S)
+	OP(Op_PushMem, %1)
+	OP(Op_CallPush, glGetUniformLocation)
+	OP(Op_Call, glUniform1iv)
+
+	OP(Op_PushConst, c_signals)
+	OP(Op_PushImm, 32)
+	OP(Op_PushConst, c_F)
+	OP(Op_PushMem, %1)
+	OP(Op_CallPush, glGetUniformLocation)
+	OP(Op_Call, glUniform1fv)
+
+	OP(Op_PushImm, 1)
+	OP(Op_PushImm, 1)
+	OP(Op_PushImm, 0)
+	;OP(Op_SubImm, 1)
+	OP(Op_Dup, 0)
+	OP(Op_Call, glRects)
+%endmacro
+
+%macro mainloop_prog 0
+	paintPass m_prog_raymarch, m_fb_raymarch, 2
+	paintPass m_prog_reflection_blur, m_fb_reflect_blur, 1
+	paintPass m_prog_composite, m_fb_composite, 1
+	paintPass m_prog_dof, m_fb_dof, 2
+	paintPass m_prog_post, 0, 0
+
+	OP(Op_PushMem, m_hdc)
+	OP(Op_Call, SwapBuffers)
+	OP(Op_PushImm, 1)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_Call, PeekMessageA)
+	OP(Op_PushConst, c_mainloop)
+	OP(Op_Jmp, 0)
+%endmacro
 
 section .doploop data align=1
 mainloop_ops:

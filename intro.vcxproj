@@ -142,12 +142,138 @@
     <ClInclude Include="timeline.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="*.glsl">
+    <CustomBuild Include="blur_reflection.glsl">
       <FileType>Document</FileType>
-      <Command>shader_minifier.exe -o %(Filename).h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main %(Identity)</Command>
-      <Outputs>%(Filename).h</Outputs>
-      <Message>Minifying shader %(Identity) to %(Filename).h</Message>
+      <Command>shader_minifier.exe -o blur_reflection.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main blur_reflection.glsl</Command>
+      <Outputs>blur_reflection.h</Outputs>
+      <Message>Minifying shader blur_reflection.glsl to blur_reflection.h</Message>
       <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="composite.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o composite.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main composite.glsl</Command>
+      <Outputs>composite.h</Outputs>
+      <Message>Minifying shader composite.glsl to composite.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="dof_tap.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o dof_tap.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main dof_tap.glsl</Command>
+      <Outputs>dof_tap.h</Outputs>
+      <Message>Minifying shader dof_tap.glsl to dof_tap.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="header.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o header.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main header.glsl</Command>
+      <Outputs>header.h</Outputs>
+      <Message>Minifying shader header.glsl to header.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="out.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o out.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main out.glsl</Command>
+      <Outputs>out.h</Outputs>
+      <Message>Minifying shader out.glsl to out.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="post.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o post.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main post.glsl</Command>
+      <Outputs>post.h</Outputs>
+      <Message>Minifying shader post.glsl to post.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="raymarch.glsl">
+      <FileType>Document</FileType>
+      <Command>shader_minifier.exe -o raymarch.h --preserve-externals --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main raymarch.glsl</Command>
+      <Outputs>raymarch.h</Outputs>
+      <Message>Minifying shader raymarch.glsl to raymarch.h</Message>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">shader_minifier.exe --no-renaming-list S,F,t,E,PI,PI2,rt,zt,Z,T,Q,X,main,P --preserve-externals -o %(Filename).h %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">Minifying shader %(Identity) to %(Filename).h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">%(Filename).h</Outputs>
     </CustomBuild>
     <CustomBuild Include="timeline.seq">
       <FileType>Document</FileType>
@@ -174,7 +300,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="intro.c">
+    <ClCompile Include="intro_c.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Capture|Win32'">false</ExcludedFromBuild>
