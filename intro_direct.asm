@@ -232,24 +232,24 @@ declare_main_mem
 %define MEMADDR(m) addr_ %+ m
 
 %macro initTexture 6
-	;push %1
-	;push GL_TEXTURE_2D
+	push %1
+	push GL_TEXTURE_2D
 	call glBindTexture
 
-	;push %6
-	;push %5
-	;push GL_RGBA
-	;push 0
-	;push %3
-	;push %2
-	;push %4
-	;push 0
-	;push GL_TEXTURE_2D
+	push %6
+	push %5
+	push GL_RGBA
+	push 0
+	push %3
+	push %2
+	push %4
+	push 0
+	push GL_TEXTURE_2D
 	call glTexImage2D
 
-	;push GL_LINEAR
-	;push GL_TEXTURE_MIN_FILTER
-	;push GL_TEXTURE_2D
+	push GL_LINEAR
+	push GL_TEXTURE_MIN_FILTER
+	push GL_TEXTURE_2D
 	call glTexParameteri
 %endmacro
 
@@ -355,12 +355,6 @@ declare_main_mem
 
 	OP(Op_PushMem, m_hdc)
 	OP(Op_Call, SwapBuffers)
-	OP(Op_PushImm, 1)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_Call, PeekMessageA)
 	OP(Op_PushConst, c_mainloop)
 	OP(Op_Jmp, 0)
 %endmacro
@@ -369,6 +363,7 @@ section .centry text align=1
 _entrypoint:
 	xor ecx, ecx
 
+%if 0
 	initTextureStack tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+5
 	initTextureStack tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
@@ -382,6 +377,7 @@ _entrypoint:
 	initTextureStack tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1
 	initTextureStack tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
+%endif
 
 	; glGenFramebuffers
 	push dev_null
@@ -476,22 +472,22 @@ alloc_resources
 
 init_textures:
 	initTexture tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
-	;push GL_TEXTURE1
+	push GL_TEXTURE1
 	call glActiveTexture
 	initTexture tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	;push GL_TEXTURE1+1
+	push GL_TEXTURE1+1
 	call glActiveTexture
 	initTexture tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	;push GL_TEXTURE1+2
+	push GL_TEXTURE1+2
 	call glActiveTexture
 	initTexture tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
-	;push GL_TEXTURE1+3
+	push GL_TEXTURE1+3
 	call glActiveTexture
 	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	;push GL_TEXTURE1+4
+	push GL_TEXTURE1+4
 	call glActiveTexture
 	initTexture tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
-	;push GL_TEXTURE1+5
+	push GL_TEXTURE1+5
 	call glActiveTexture
 	initTexture tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 
@@ -528,6 +524,15 @@ mainloop:
 
 	push edi
 	call SwapBuffers
+
+%if 0
+	OP(Op_PushImm, 1)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_PushImm, 0)
+	OP(Op_Call, PeekMessageA)
+%endif
 
 	push 01bH
 	call _GetAsyncKeyState@4
