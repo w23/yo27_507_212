@@ -9,6 +9,9 @@ global _entrypoint
 
 %define GL_CHECK_ERRORS
 
+%ifndef _DEBUG
+%define GLCHECK
+%else
 %macro GLCHECK 0
 	call glGetError
 	test eax, eax
@@ -16,6 +19,7 @@ global _entrypoint
 	int 3
 %%ok:
 %endmacro
+%endif
 
 GL_TEXTURE_2D EQU 0x0de1
 GL_FRAGMENT_SHADER EQU 0x8b30
@@ -138,6 +142,8 @@ screenSettings:
 section .dstatic data
 static:
 	db "static", 0
+S: db 'S', 0
+F: db 'F', 0
 
 section .bnoise bss
 noise: resb NOISE_SIZE_BYTES
@@ -146,7 +152,7 @@ section .dsptrs data
 src_raymarch:
 	dd _header_glsl
 	dd _raymarch_glsl
-src_reflection_blur:
+src_reflect_blur:
 	dd _header_glsl
 	dd _blur_reflection_glsl
 src_composite:
@@ -187,7 +193,7 @@ main_mem:
 	MEMVAR fb_composite
 	MEMVAR fb_dof
 	MEMVAR prog_raymarch
-	MEMVAR prog_reflection_blur
+	MEMVAR prog_reflect_blur
 	MEMVAR prog_composite
 	MEMVAR prog_dof
 	MEMVAR prog_post
@@ -236,14 +242,12 @@ declare_main_mem
 	push GL_FRAMEBUFFER
 	call glFramebufferTexture2D
 
-%if %3 != 0
 	push 0
 	push %3
 	push GL_TEXTURE_2D
 	push GL_COLOR_ATTACHMENT1
 	push GL_FRAMEBUFFER
 	call glFramebufferTexture2D
-%endif
 %endmacro
 
 %macro compileProgram 2
@@ -254,69 +258,14 @@ declare_main_mem
 	mov %1, eax
 %endmacro
 
-%macro entry_prog 0
-%if 0
-	OP(Op_PushConst, c_tex_slots)
-	OP(Op_PushImm, 7)
-	OP(Op_Call, glGenTextures)
-
-	OP(Op_PushConst, c_fb_slots)
-	OP(Op_PushImm, 4)
-	OP(Op_Call, glGenFramebuffers)
-
-	initTexture m_tex_noise, c_noise_size, c_noise_size, c_GL_RGBA, c_GL_UNSIGNED_BYTE, c_noise
-
-	OP(Op_PushConst, c_GL_TEXTURE1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_raymarch_primary, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_raymarch_reflect, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_reflect_blur, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_composite, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_dof_near, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_dof_far, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
-
-	initFb m_fb_raymarch, m_tex_raymarch_primary, m_tex_raymarch_reflect
-	initFb m_fb_reflect_blur, m_tex_reflect_blur, 0
-	initFb m_fb_composite, m_tex_composite, 0
-	initFb m_fb_dof, m_tex_dof_near, m_tex_dof_far
-
-	compileProgram m_prog_raymarch, c_src_raymarch
-	compileProgram m_prog_reflection_blur, c_src_reflection_blur
-	compileProgram m_prog_composite, c_src_composite
-	compileProgram m_prog_dof, c_src_dof
-%endif
-
-	compileProgram m_prog_post, c_src_post
-
-	OP(Op_PushConst, c_mainloop)
-	OP(Op_Jmp, 0)
-%endmacro
-
 %macro paintPass 3
-%if 0
 	push %2
 	push GL_FRAMEBUFFER
 	call glBindFramebuffer
 	GLCHECK
-%endif
 
-%if %2 != 0
+%ifnum %2
+%else
 	push draw_buffers
 	push %3
 	call glDrawBuffers
@@ -327,21 +276,21 @@ declare_main_mem
 	call glUseProgram
 	GLCHECK
 
-%if 0
-	OP(Op_PushConst, c_samplers)
-	OP(Op_PushImm, 7)
-	OP(Op_PushConst, c_S)
-	OP(Op_PushMem, %1)
-	OP(Op_CallPush, glGetUniformLocation)
-	OP(Op_Call, glUniform1iv)
+	push samplers
+	push 7
+	push S
+	push %1
+	call glGetUniformLocation
+	push eax
+	call glUniform1iv
 
-	OP(Op_PushConst, c_signals)
-	OP(Op_PushImm, 16)
-	OP(Op_PushConst, c_F)
-	OP(Op_PushMem, %1)
-	OP(Op_CallPush, glGetUniformLocation)
-	OP(Op_Call, glUniform1fv)
-%endif
+	push signals
+	push 16
+	push F
+	push %1
+	call glGetUniformLocation
+	push eax
+	call glUniform1fv
 
 	push 1
 	push 1
@@ -353,7 +302,7 @@ declare_main_mem
 %macro mainloop_prog 0
 %if 0
 	paintPass m_prog_raymarch, m_fb_raymarch, 2
-	paintPass m_prog_reflection_blur, m_fb_reflect_blur, 1
+	paintPass m_prog_reflect_blur, m_fb_reflect_blur, 1
 	paintPass m_prog_composite, m_fb_composite, 1
 	paintPass m_prog_dof, m_fb_dof, 2
 %endif
@@ -423,7 +372,7 @@ gl_proc_skip_until_zero:
 	jnz gl_proc_loader_loop
 
 generate_noise:
-%if 1
+%if 0
 	xor eax, eax
 	mov ebx, noise
 	mov ecx, NOISE_SIZE_BYTES
@@ -459,43 +408,35 @@ noise_loop:
 	call glGenFramebuffers
 	GLCHECK
 
-%if 0
-	initTexture m_tex_noise, c_noise_size, c_noise_size, c_GL_RGBA, c_GL_UNSIGNED_BYTE, c_noise
+	initTexture dword MEM(m_tex_noise), NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
 
-	OP(Op_PushConst, c_GL_TEXTURE1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_raymarch_primary, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_raymarch_reflect, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_reflect_blur, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_composite, c_width, c_height, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_dof_near, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
-	OP(Op_AddImm, 1)
-	OP(Op_Dup, 0)
-	OP(Op_Call, glActiveTexture)
-	initTexture m_tex_dof_far, c_width2, c_height2, c_GL_RGBA16F, c_GL_FLOAT, 0
+	push GL_TEXTURE1
+	call glActiveTexture
+	initTexture dword MEM(m_tex_raymarch_primary), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+1
+	call glActiveTexture
+	initTexture dword MEM(m_tex_raymarch_reflect), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+2
+	call glActiveTexture
+	initTexture dword MEM(m_tex_reflect_blur), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+3
+	call glActiveTexture
+	initTexture dword MEM(m_tex_composite), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+4
+	call glActiveTexture
+	initTexture dword MEM(m_tex_dof_near), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+5
+	call glActiveTexture
+	initTexture dword MEM(m_tex_dof_far), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 
-	initFb m_fb_raymarch, m_tex_raymarch_primary, m_tex_raymarch_reflect
-	initFb m_fb_reflect_blur, m_tex_reflect_blur, 0
-	initFb m_fb_composite, m_tex_composite, 0
-	initFb m_fb_dof, m_tex_dof_near, m_tex_dof_far
-%endif
+	initFb dword MEM(m_fb_raymarch), dword MEM(m_tex_raymarch_primary), dword MEM(m_tex_raymarch_reflect)
+	initFb dword MEM(m_fb_reflect_blur), dword MEM(m_tex_reflect_blur), 0
+	initFb dword MEM(m_fb_composite), dword MEM(m_tex_composite), 0
+	initFb dword MEM(m_fb_dof), dword MEM(m_tex_dof_near), dword MEM(m_tex_dof_far)
 
 	compileProgram MEM(m_prog_raymarch), src_raymarch
 	GLCHECK
-	compileProgram MEM(m_prog_reflection_blur), src_reflection_blur
+	compileProgram MEM(m_prog_reflect_blur), src_reflect_blur
 	GLCHECK
 	compileProgram MEM(m_prog_composite), src_composite
 	GLCHECK
@@ -516,7 +457,16 @@ mainloop:
 %endif
 
 	GLCHECK
+	paintPass dword MEM(m_prog_raymarch), dword MEM(m_fb_raymarch), 2
+	GLCHECK
+	paintPass dword MEM(m_prog_reflect_blur), dword MEM(m_fb_reflect_blur), 1
+	GLCHECK
+	paintPass dword MEM(m_prog_composite), dword MEM(m_fb_composite), 1
+	GLCHECK
+	paintPass dword MEM(m_prog_dof), dword MEM(m_fb_dof), 2
+	GLCHECK
 	paintPass dword MEM(m_prog_post), 0, 0
+	GLCHECK
 
 	push dword MEM(m_hdc)
 	call SwapBuffers
