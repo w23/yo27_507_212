@@ -173,6 +173,25 @@ section .dsmplrs data
 samplers:
 	dd 0, 1, 2, 3, 4, 5, 6
 
+tex_noise EQU 1
+tex_raymarch_primary EQU 2
+tex_raymarch_reflect EQU 3
+tex_reflect_blur EQU 4
+tex_composite EQU 5
+tex_dof_near EQU 6
+tex_dof_far EQU 7
+
+fb_raymarch EQU 1
+fb_reflect_blur EQU 2
+fb_composite EQU 3
+fb_dof EQU 4
+
+prog_raymarch EQU 1
+prog_reflect_blur EQU 2
+prog_composite EQU 3
+prog_dof EQU 4
+prog_post EQU 5
+
 section .bsignals data
 signals:
 	times 32 dd 5.0
@@ -180,7 +199,6 @@ signals:
 section .bmamem bss
 main_mem:
 %macro declare_main_mem 0
-	MEMVAR hdc
 	MEMVAR tex_noise
 	MEMVAR tex_raymarch_primary
 	MEMVAR tex_raymarch_reflect
@@ -255,7 +273,7 @@ declare_main_mem
 	push 2
 	push GL_FRAGMENT_SHADER
 	call glCreateShaderProgramv
-	mov %1, eax
+	; ignore mov %1, eax
 %endmacro
 
 %macro paintPass 3
@@ -322,37 +340,52 @@ declare_main_mem
 
 section .centry text align=1
 _entrypoint:
+	xor ecx, ecx
+
 	mov ebp, main_mem
 	push pfd
 	push pfd
-	push 0
-	push 0
-	push 0
-	push 0
+	push ecx
+	push ecx
+	push ecx
+	push ecx
 	push HEIGHT
 	push WIDTH
-	push 0
-	push 0
+	push ecx
+	push ecx
 	push 0x90000000
-	push 0
+	push ecx
 	push static
-	push 0
-	push 0
+	push ecx
+	push ecx
+
+generate_noise:
+	; expects ecx zero
+	xor edx, edx
+noise_loop:
+	IMUL ECX, ECX, 0x19660D
+	ADD ECX, 0x3C6EF35F
+	MOV EAX, ECX
+	SHR EAX, 0x12
+	MOV [EDX+noise], AL
+	INC EDX
+	CMP EDX, NOISE_SIZE_BYTES
+	JL noise_loop
 
 	call ShowCursor
 	call CreateWindowExA
 	push eax
 	call GetDC
 	push eax
-	mov MEM(m_hdc), eax
+	mov edi, eax ; edi is hdc from now on
 	call ChoosePixelFormat
 	push eax
-	push dword MEM(m_hdc)
+	push edi
 	call SetPixelFormat
-	push dword MEM(m_hdc)
+	push edi
 	call wglCreateContext
 	push eax
-	push dword MEM(m_hdc)
+	push edi
 	call wglMakeCurrent
 
 gl_proc_loader:
@@ -371,31 +404,6 @@ gl_proc_skip_until_zero:
 	cmp [esi], al
 	jnz gl_proc_loader_loop
 
-generate_noise:
-%if 0
-	xor eax, eax
-	mov ebx, noise
-	mov ecx, NOISE_SIZE_BYTES
-noise_loop:
-	imul eax, eax, 0x19660d
-	add eax, 0x3c6ef35f
-	mov edx, eax
-	shr edx, 12
-	mov [noise + ecx], dl
-	loop noise_loop
-%else
-	xor ecx, ecx
-	xor edx, edx
-noise_loop:
-	IMUL ECX, ECX, 0x19660D
-	ADD ECX, 0x3C6EF35F
-	MOV EAX, ECX
-	SHR EAX, 0x12
-	MOV [EDX+noise], AL
-	INC EDX
-	CMP EDX, NOISE_SIZE_BYTES
-	JL noise_loop
-%endif
 	GLCHECK
 
 	push MEMADDR(m_tex_noise)
@@ -408,31 +416,31 @@ noise_loop:
 	call glGenFramebuffers
 	GLCHECK
 
-	initTexture dword MEM(m_tex_noise), NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
+	initTexture tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
 
 	push GL_TEXTURE1
 	call glActiveTexture
-	initTexture dword MEM(m_tex_raymarch_primary), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+1
 	call glActiveTexture
-	initTexture dword MEM(m_tex_raymarch_reflect), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+2
 	call glActiveTexture
-	initTexture dword MEM(m_tex_reflect_blur), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+3
 	call glActiveTexture
-	initTexture dword MEM(m_tex_composite), WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+4
 	call glActiveTexture
-	initTexture dword MEM(m_tex_dof_near), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+5
 	call glActiveTexture
-	initTexture dword MEM(m_tex_dof_far), WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 
-	initFb dword MEM(m_fb_raymarch), dword MEM(m_tex_raymarch_primary), dword MEM(m_tex_raymarch_reflect)
-	initFb dword MEM(m_fb_reflect_blur), dword MEM(m_tex_reflect_blur), 0
-	initFb dword MEM(m_fb_composite), dword MEM(m_tex_composite), 0
-	initFb dword MEM(m_fb_dof), dword MEM(m_tex_dof_near), dword MEM(m_tex_dof_far)
+	initFb fb_raymarch, tex_raymarch_primary, tex_raymarch_reflect
+	initFb fb_reflect_blur, tex_reflect_blur, 0
+	initFb fb_composite, tex_composite, 0
+	initFb fb_dof, tex_dof_near, tex_dof_far
 
 	compileProgram MEM(m_prog_raymarch), src_raymarch
 	GLCHECK
@@ -446,29 +454,19 @@ noise_loop:
 	GLCHECK
 
 mainloop:
-%if 0
-	push 0
-	push 0x3e800000
-	push 0x3e800000
-	push 0
-	call _glClearColor@16
-	push 0x4000
-	call _glClear@4
-%endif
-
 	GLCHECK
-	paintPass dword MEM(m_prog_raymarch), dword MEM(m_fb_raymarch), 2
+	paintPass prog_raymarch, fb_raymarch, 2
 	GLCHECK
-	paintPass dword MEM(m_prog_reflect_blur), dword MEM(m_fb_reflect_blur), 1
+	paintPass prog_reflect_blur, fb_reflect_blur, 1
 	GLCHECK
-	paintPass dword MEM(m_prog_composite), dword MEM(m_fb_composite), 1
+	paintPass prog_composite, fb_composite, 1
 	GLCHECK
-	paintPass dword MEM(m_prog_dof), dword MEM(m_fb_dof), 2
+	paintPass prog_dof, fb_dof, 2
 	GLCHECK
-	paintPass dword MEM(m_prog_post), 0, 0
+	paintPass prog_post, 0, 0
 	GLCHECK
 
-	push dword MEM(m_hdc)
+	push edi
 	call SwapBuffers
 
 	push 01bH
