@@ -279,6 +279,7 @@ declare_main_mem
 	push %1
 	push GL_FRAMEBUFFER
 	call glBindFramebuffer
+	GLCHECK
 
 	push 0
 	push %2
@@ -286,6 +287,7 @@ declare_main_mem
 	push GL_COLOR_ATTACHMENT0
 	push GL_FRAMEBUFFER
 	call glFramebufferTexture2D
+	GLCHECK
 
 	push 0
 	push %3
@@ -293,6 +295,7 @@ declare_main_mem
 	push GL_COLOR_ATTACHMENT1
 	push GL_FRAMEBUFFER
 	call glFramebufferTexture2D
+	GLCHECK
 %endmacro
 
 %macro compileProgram 2
@@ -301,6 +304,7 @@ declare_main_mem
 	push GL_FRAGMENT_SHADER
 	call glCreateShaderProgramv
 	; ignore mov %1, eax
+	GLCHECK
 %endmacro
 
 %macro paintPass 3
@@ -342,21 +346,6 @@ declare_main_mem
 	push byte -1
 	push byte -1
 	call glRects
-%endmacro
-
-%macro mainloop_prog 0
-%if 0
-	paintPass m_prog_raymarch, m_fb_raymarch, 2
-	paintPass m_prog_reflect_blur, m_fb_reflect_blur, 1
-	paintPass m_prog_composite, m_fb_composite, 1
-	paintPass m_prog_dof, m_fb_dof, 2
-%endif
-	paintPass m_prog_post, 0, 0
-
-	OP(Op_PushMem, m_hdc)
-	OP(Op_Call, SwapBuffers)
-	OP(Op_PushConst, c_mainloop)
-	OP(Op_Jmp, 0)
 %endmacro
 
 section .centry text align=1
@@ -499,43 +488,30 @@ init_fbs:
 
 init_progs:
 	compileProgram MEM(m_prog_raymarch), src_raymarch
-	GLCHECK
 	compileProgram MEM(m_prog_reflect_blur), src_reflect_blur
-	GLCHECK
 	compileProgram MEM(m_prog_composite), src_composite
-	GLCHECK
 	compileProgram MEM(m_prog_dof), src_dof
-	GLCHECK
 	compileProgram MEM(m_prog_post), src_post
-	GLCHECK
 
 mainloop:
-	GLCHECK
 	paintPass prog_raymarch, fb_raymarch, 2
-	GLCHECK
 	paintPass prog_reflect_blur, fb_reflect_blur, 1
-	GLCHECK
 	paintPass prog_composite, fb_composite, 1
-	GLCHECK
 	paintPass prog_dof, fb_dof, 2
-	GLCHECK
 	paintPass prog_post, 0, 0
-	GLCHECK
 
 	push edi
 	call SwapBuffers
 
-%if 0
-	OP(Op_PushImm, 1)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_PushImm, 0)
-	OP(Op_Call, PeekMessageA)
-%endif
+	push 01bH ;GetAsyncKeyState
 
-	push 01bH
-	call _GetAsyncKeyState@4
+	push 1
+	push 0
+	push 0
+	push 0
+	push 0
+	call PeekMessageA
+	call GetAsyncKeyState
 	jz mainloop
 
-	call _ExitProcess@4
+	call ExitProcess
