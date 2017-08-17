@@ -3,7 +3,7 @@ global _entrypoint
 
 %define WIDTH 1280
 %define HEIGHT	720
-%define FULLSCREEN 0
+%define FULLSCREEN
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
@@ -36,6 +36,9 @@ GL_COLOR_ATTACHMENT1 EQU 0x8ce1
 
 %macro WINAPI_FUNCLIST 0
 	WINAPI_FUNC ExitProcess, 4
+%ifdef FULLSCREEN
+	WINAPI_FUNC ChangeDisplaySettingsA, 8
+%endif
 	WINAPI_FUNC ShowCursor, 4
 	WINAPI_FUNC CreateWindowExA, 48
 	WINAPI_FUNC GetDC, 4
@@ -126,9 +129,9 @@ pfd:
 	DB	00H, 020H, 00H, 00H, 00H, 00H
 	DD	00H, 00H, 00H
 
-%if 0
-section .dscrset data
-screenSettings:
+%ifdef FULLSCREEN
+section .ddevmod data
+devmode:
 	DB	00H
 	DW	00H, 00H, 09cH, 00H
 	DD	01c0000H
@@ -139,13 +142,15 @@ screenSettings:
 	times 10 dd 0
 %endif
 
-section .dstatic data
-static:
-	db "static", 0
+section .dstrs data
+%ifdef DEBUG
+static: db "static", 0
+%endif
 S: db 'S', 0
 F: db 'F', 0
 
 section .bnoise bss
+dev_null: resd 7
 noise: resb NOISE_SIZE_BYTES
 
 section .dsptrs data
@@ -227,9 +232,32 @@ declare_main_mem
 %define MEMADDR(m) addr_ %+ m
 
 %macro initTexture 6
-	push %1
-	push GL_TEXTURE_2D
+	;push %1
+	;push GL_TEXTURE_2D
 	call glBindTexture
+
+	;push %6
+	;push %5
+	;push GL_RGBA
+	;push 0
+	;push %3
+	;push %2
+	;push %4
+	;push 0
+	;push GL_TEXTURE_2D
+	call glTexImage2D
+
+	;push GL_LINEAR
+	;push GL_TEXTURE_MIN_FILTER
+	;push GL_TEXTURE_2D
+	call glTexParameteri
+%endmacro
+
+%macro initTextureStack 6
+	push GL_LINEAR
+	push GL_TEXTURE_MIN_FILTER
+	push GL_TEXTURE_2D
+	;call glTexParameteri
 
 	push %6
 	push %5
@@ -240,12 +268,11 @@ declare_main_mem
 	push %4
 	push 0
 	push GL_TEXTURE_2D
-	call glTexImage2D
+	;call glTexImage2D
 
-	push GL_LINEAR
-	push GL_TEXTURE_MIN_FILTER
+	push %1
 	push GL_TEXTURE_2D
-	call glTexParameteri
+	;call glBindTexture
 %endmacro
 
 %macro initFb 3
@@ -342,8 +369,29 @@ section .centry text align=1
 _entrypoint:
 	xor ecx, ecx
 
-	mov ebp, main_mem
+	initTextureStack tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+5
+	initTextureStack tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+4
+	initTextureStack tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+3
+	initTextureStack tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+2
+	initTextureStack tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+1
+	initTextureStack tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1
+	initTextureStack tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
+
+	; glGenFramebuffers
+	push dev_null
+	push 4
+	; glGenTextures
+	push dev_null
+	push 7
+	; SetPixelFormat
 	push pfd
+	; ChoosePixelFormat
 	push pfd
 	push ecx
 	push ecx
@@ -355,9 +403,18 @@ _entrypoint:
 	push ecx
 	push 0x90000000
 	push ecx
+%ifdef DEBUG
 	push static
+%else
+	push 0xc018
+%endif
 	push ecx
 	push ecx
+
+%ifdef FULLSCREEN
+	push 4
+	push devmode
+%endif
 
 generate_noise:
 	; expects ecx zero
@@ -371,6 +428,11 @@ noise_loop:
 	INC EDX
 	CMP EDX, NOISE_SIZE_BYTES
 	JL noise_loop
+
+window_init:
+%ifdef FULLSCREEN
+	call ChangeDisplaySettingsA
+%endif
 
 	call ShowCursor
 	call CreateWindowExA
@@ -387,6 +449,7 @@ noise_loop:
 	push eax
 	push edi
 	call wglMakeCurrent
+	GLCHECK
 
 gl_proc_loader:
 	mov esi, gl_proc_names
@@ -403,45 +466,42 @@ gl_proc_skip_until_zero:
 	jnz gl_proc_skip_until_zero
 	cmp [esi], al
 	jnz gl_proc_loader_loop
-
 	GLCHECK
 
-	push MEMADDR(m_tex_noise)
-	push 7
+alloc_resources
 	call glGenTextures
 	GLCHECK
-
-	push MEMADDR(m_fb_raymarch)
-	push 4
 	call glGenFramebuffers
 	GLCHECK
 
+init_textures:
 	initTexture tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
-
-	push GL_TEXTURE1
+	;push GL_TEXTURE1
 	call glActiveTexture
 	initTexture tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	push GL_TEXTURE1+1
+	;push GL_TEXTURE1+1
 	call glActiveTexture
 	initTexture tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	push GL_TEXTURE1+2
+	;push GL_TEXTURE1+2
 	call glActiveTexture
 	initTexture tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
-	push GL_TEXTURE1+3
+	;push GL_TEXTURE1+3
 	call glActiveTexture
 	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
-	push GL_TEXTURE1+4
+	;push GL_TEXTURE1+4
 	call glActiveTexture
 	initTexture tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
-	push GL_TEXTURE1+5
+	;push GL_TEXTURE1+5
 	call glActiveTexture
 	initTexture tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 
+init_fbs:
 	initFb fb_raymarch, tex_raymarch_primary, tex_raymarch_reflect
 	initFb fb_reflect_blur, tex_reflect_blur, 0
 	initFb fb_composite, tex_composite, 0
 	initFb fb_dof, tex_dof_near, tex_dof_far
 
+init_progs:
 	compileProgram MEM(m_prog_raymarch), src_raymarch
 	GLCHECK
 	compileProgram MEM(m_prog_reflect_blur), src_reflect_blur
