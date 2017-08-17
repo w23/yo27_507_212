@@ -18,15 +18,18 @@
     <CustomBuild Include="intro.asm">
       <Filter>Файлы исходного кода</Filter>
     </CustomBuild>
+    <CustomBuild Include="blur_reflection.glsl" />
+    <CustomBuild Include="composite.glsl" />
+    <CustomBuild Include="dof_tap.glsl" />
+    <CustomBuild Include="post.glsl" />
+    <CustomBuild Include="raymarch.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="blur_reflection.glsl" />
-    <None Include="composite.glsl" />
-    <None Include="dof_tap.glsl" />
-    <None Include="post.glsl" />
-    <None Include="raymarch.glsl" />
     <None Include="header.inc">
       <Filter>Заголовочные файлы</Filter>
+    </None>
+    <None Include="intro_direct.asm">
+      <Filter>Файлы исходного кода</Filter>
     </None>
   </ItemGroup>
 </Project>
