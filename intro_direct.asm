@@ -132,12 +132,10 @@ pfd:
 %ifdef FULLSCREEN
 section .ddevmod data
 devmode:
-	DB	00H
-	DW	00H, 00H, 09cH, 00H
-	DD	01c0000H
-	DW	00H, 00H, 00H, 00H, 00H, 00H
-	DB	00H
-	DW	00H
+	times 9 dd 0
+	db 0x9c, 0, 0, 0
+	db 0, 0, 0x1c, 0
+	times 15 dd 0
 	DD	020H, WIDTH, HEIGHT
 	times 10 dd 0
 %endif
