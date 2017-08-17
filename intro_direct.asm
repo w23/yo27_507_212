@@ -451,7 +451,7 @@ gl_proc_skip_until_zero:
 	jnz gl_proc_loader_loop
 	GLCHECK
 
-alloc_resources
+alloc_resources:
 	call glGenTextures
 	GLCHECK
 	call glGenFramebuffers
