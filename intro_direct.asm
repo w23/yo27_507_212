@@ -3,13 +3,15 @@ global _entrypoint
 
 %define WIDTH 1280
 %define HEIGHT	720
-%define FULLSCREEN
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
+%define SAMPLERATE 44100
+%define SOUND_SAMPLES (SAMPLERATE * 60)
 
 %define GL_CHECK_ERRORS
 
-%ifndef _DEBUG
+%ifndef DEBUG
+%define FULLSCREEN
 %define GLCHECK
 %else
 %macro GLCHECK 0
@@ -35,10 +37,12 @@ GL_COLOR_ATTACHMENT0 EQU 0x8ce0
 GL_COLOR_ATTACHMENT1 EQU 0x8ce1
 
 %macro WINAPI_FUNCLIST 0
-	WINAPI_FUNC ExitProcess, 4
 %ifdef FULLSCREEN
 	WINAPI_FUNC ChangeDisplaySettingsA, 8
 %endif
+	WINAPI_FUNC CreateThread, 24
+	WINAPI_FUNC waveOutOpen, 24
+	WINAPI_FUNC waveOutWrite, 12
 	WINAPI_FUNC ShowCursor, 4
 	WINAPI_FUNC CreateWindowExA, 48
 	WINAPI_FUNC GetDC, 4
@@ -60,6 +64,7 @@ GL_COLOR_ATTACHMENT1 EQU 0x8ce1
 	WINAPI_FUNC glClearColor, 16
 	WINAPI_FUNC glClear, 4
 %endif
+	WINAPI_FUNC ExitProcess, 4
 %endmacro
 
 %macro WINAPI_FUNC 2
@@ -146,6 +151,28 @@ static: db "static", 0
 %endif
 S: db 'S', 0
 F: db 'F', 0
+
+section .dwvfmt data
+wavefmt:
+	dw 3 ; wFormatTag = WAVE_FORMAT_IEEE_FLOAT
+	dw 2 ; nChannels
+	dw SAMPLERATE ; nSamplesPerSec
+	dd SAMPLERATE * 4 * 2; nAvgBytesPerSec
+  dw 4 * 2 ; nBlockAlign
+  dw 8 * 4 * 2 ; wBitsPerSample
+  dw 0 ; cbSize
+
+section .dwvhdr data
+wavehdr:
+	dd sound_buffer ; lpData
+	dd SOUND_SAMPLES * 2 * 4 ; dwBufferLength
+	times 2 dd 0 ; unused stuff
+	dd 0 ; dwFlags TODO WHDR_PREPARED   0x00000002
+	times 3 dd 0 ; unused stuff
+	wavehdr_size EQU $$ - wavehdr
+
+section .bsndbuf bss
+sound_buffer: resd SOUND_SAMPLES * 2
 
 section .bnoise bss
 dev_null: resd 7
@@ -396,10 +423,32 @@ _entrypoint:
 	push ecx
 	push ecx
 
+%if 0
+	;CHECK(waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL));
+	push ecx
+	push ecx
+	push ecx
+	push wavefmt
+	push -1
+	push noise
+
+	;CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
+	;push wavehdr_size
+	;push wavehdr
+%endif
+
 %ifdef FULLSCREEN
 	push 4
 	push devmode
 %endif
+
+;	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)soundRender, sound_buffer, 0, 0);
+	push ecx
+	push ecx
+	push test_sound_proc
+	push sound_buffer
+	push ecx
+	push ecx
 
 generate_noise:
 	; expects ecx zero
@@ -414,11 +463,15 @@ noise_loop:
 	CMP EDX, NOISE_SIZE_BYTES
 	JL noise_loop
 
+	call CreateThread
+
 window_init:
 %ifdef FULLSCREEN
 	call ChangeDisplaySettingsA
 %endif
 
+	;call waveOutOpen
+	mov ebp, dword [noise]
 	call ShowCursor
 	call CreateWindowExA
 	push eax
@@ -493,6 +546,12 @@ init_progs:
 	compileProgram MEM(m_prog_dof), src_dof
 	compileProgram MEM(m_prog_post), src_post
 
+	push wavehdr_size
+	push wavehdr
+	push ebp
+	call waveOutWrite
+	;CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
+
 mainloop:
 	paintPass prog_raymarch, fb_raymarch, 2
 	paintPass prog_reflect_blur, fb_reflect_blur, 1
@@ -515,3 +574,9 @@ mainloop:
 	jz mainloop
 
 	call ExitProcess
+
+%if 1
+section .ctstsnd code
+test_sound_proc:
+	ret
+%endif

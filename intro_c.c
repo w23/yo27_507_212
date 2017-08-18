@@ -6,7 +6,7 @@
 #endif
 //#define DO_RANGES
 
-//#define SOUND
+#define SOUND
 
 #ifdef _DEBUG
 #ifdef FULLSCREEN
