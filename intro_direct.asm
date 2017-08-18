@@ -167,7 +167,8 @@ wavehdr:
 	dd sound_buffer ; lpData
 	dd SOUND_SAMPLES * 2 * 4 ; dwBufferLength
 	times 2 dd 0 ; unused stuff
-	dd 0 ; dwFlags TODO WHDR_PREPARED   0x00000002
+	;dd 0 ; dwFlags TODO WHDR_PREPARED   0x00000002
+	dd 2 ; dwFlags WHDR_PREPARED  =  0x00000002
 	times 3 dd 0 ; unused stuff
 	wavehdr_size EQU $$ - wavehdr
 
@@ -423,7 +424,7 @@ _entrypoint:
 	push ecx
 	push ecx
 
-%if 0
+%if 1
 	;CHECK(waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL));
 	push ecx
 	push ecx
@@ -445,10 +446,11 @@ _entrypoint:
 ;	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)soundRender, sound_buffer, 0, 0);
 	push ecx
 	push ecx
-	push test_sound_proc
 	push sound_buffer
+	push test_sound_proc
 	push ecx
 	push ecx
+	call CreateThread
 
 generate_noise:
 	; expects ecx zero
@@ -463,14 +465,12 @@ noise_loop:
 	CMP EDX, NOISE_SIZE_BYTES
 	JL noise_loop
 
-	call CreateThread
-
 window_init:
 %ifdef FULLSCREEN
 	call ChangeDisplaySettingsA
 %endif
 
-	;call waveOutOpen
+	call waveOutOpen
 	mov ebp, dword [noise]
 	call ShowCursor
 	call CreateWindowExA
@@ -546,11 +546,13 @@ init_progs:
 	compileProgram MEM(m_prog_dof), src_dof
 	compileProgram MEM(m_prog_post), src_post
 
+%if 1
 	push wavehdr_size
 	push wavehdr
 	push ebp
 	call waveOutWrite
 	;CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
+%endif
 
 mainloop:
 	paintPass prog_raymarch, fb_raymarch, 2
@@ -578,5 +580,6 @@ mainloop:
 %if 1
 section .ctstsnd code
 test_sound_proc:
-	ret
+	nop
+	jmp test_sound_proc
 %endif
