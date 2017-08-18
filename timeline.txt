@@ -2,7 +2,7 @@ bpm 60
 bar_ticks 4
 
 ; time = "bar:tick"
-preview_loop 0:0 4:0
+preview_loop 0:0 16:0
 
 ; set <row> <value>
 ; lin <row> <value_end> <time_end>
@@ -33,18 +33,35 @@ t 0:0
 	set 1 7
 	set 2 1
 	set 3 -10
-	lin 3 -5 4:0
+	lin 3 -5 16:0
 
 	set 4 8
 	set 5 1
 	set 6 -10
-	lin 6 -5 4:0
+	lin 6 -5 16:0
 
 	set 7 0
 	set 8 1
 	set 9 1
 
 	;lin 9 10 4:0
+t 8:0
+	set 1 0
+	set 2 0
+	set 3 .5
 
-t 4:0
+	lin 1 1 8:0
+	lin 2 6 8:0
+
+	set 4 0
+	set 5 3
+	set 6 0
+
+	set 9 .1
+	lin 9 10 8:0
+
+t 12:0
+	lin 9 .1 8:0
+
+t 32:0
 	loop
