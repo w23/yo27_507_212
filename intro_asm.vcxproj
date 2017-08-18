@@ -196,6 +196,19 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="4klang.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Assembling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Identity)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\%(Filename).obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">$(Configuration)\%(Filename).obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\%(Filename).obj</Outputs>
+    </CustomBuild>
+    <None Include="4klang.inc" />
     <None Include="header.inc" />
     <CustomBuild Include="intro_direct.asm">
       <FileType>Document</FileType>
@@ -203,7 +216,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">Assembling %(Identity)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">$(Configuration)\%(Filename).obj</Outputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='ReleaseSlow|Win32'">raymarch.inc;blur_reflection.inc;composite.inc;dof_tap.inc;post.inc</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 -DDEBUG "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"C:\Program Files\NASM\nasm.exe" -f win32 "%(Identity)" -o "$(Configuration)\%(Filename).obj"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Identity)</Message>

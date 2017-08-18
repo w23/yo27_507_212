@@ -23,6 +23,9 @@
     <CustomBuild Include="dof_tap.glsl" />
     <CustomBuild Include="post.glsl" />
     <CustomBuild Include="raymarch.glsl" />
+    <CustomBuild Include="4klang.asm">
+      <Filter>Файлы исходного кода</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <None Include="header.inc">
@@ -30,6 +33,9 @@
     </None>
     <None Include="intro_direct.asm">
       <Filter>Файлы исходного кода</Filter>
+    </None>
+    <None Include="4klang.inc">
+      <Filter>Заголовочные файлы</Filter>
     </None>
   </ItemGroup>
 </Project>

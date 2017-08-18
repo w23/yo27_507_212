@@ -5,8 +5,23 @@ global _entrypoint
 %define HEIGHT	720
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
-%define SAMPLERATE 44100
-%define SOUND_SAMPLES (SAMPLERATE * 60)
+
+;%include "4klang.inc"
+%define SAMPLE_RATE	44100
+%define MAX_INSTRUMENTS	6
+%define MAX_VOICES 2
+%define HLD 1
+%define BPM 60.000000
+%define MAX_PATTERNS 37
+%define PATTERN_SIZE_SHIFT 4
+%define PATTERN_SIZE (1 << PATTERN_SIZE_SHIFT)
+%define	MAX_TICKS (MAX_PATTERNS*PATTERN_SIZE)
+%define	SAMPLES_PER_TICK 11025
+%define DEF_LFO_NORMALIZE 0.0000226757
+%define	MAX_SAMPLES	(SAMPLES_PER_TICK*MAX_TICKS)
+extern __4klang_render@4
+;%define SAMPLERATE 44100
+;%define SOUND_SAMPLES (SAMPLERATE * 60)
 
 %define GL_CHECK_ERRORS
 
@@ -156,24 +171,24 @@ section .dwvfmt data
 wavefmt:
 	dw 3 ; wFormatTag = WAVE_FORMAT_IEEE_FLOAT
 	dw 2 ; nChannels
-	dw SAMPLERATE ; nSamplesPerSec
-	dd SAMPLERATE * 4 * 2; nAvgBytesPerSec
+	dd SAMPLE_RATE ; nSamplesPerSec
+	dd SAMPLE_RATE * 4 * 2; nAvgBytesPerSec
   dw 4 * 2 ; nBlockAlign
-  dw 8 * 4 * 2 ; wBitsPerSample
+  dw 8 * 4 ; wBitsPerSample
   dw 0 ; cbSize
 
 section .dwvhdr data
 wavehdr:
 	dd sound_buffer ; lpData
-	dd SOUND_SAMPLES * 2 * 4 ; dwBufferLength
+	dd MAX_SAMPLES * 2 * 4 ; dwBufferLength
 	times 2 dd 0 ; unused stuff
 	;dd 0 ; dwFlags TODO WHDR_PREPARED   0x00000002
 	dd 2 ; dwFlags WHDR_PREPARED  =  0x00000002
-	times 3 dd 0 ; unused stuff
-	wavehdr_size EQU $$ - wavehdr
+	times 4 dd 0 ; unused stuff
+	wavehdr_size EQU ($ - wavehdr)
 
 section .bsndbuf bss
-sound_buffer: resd SOUND_SAMPLES * 2
+sound_buffer: resd MAX_SAMPLES * 2
 
 section .bnoise bss
 dev_null: resd 7
@@ -447,7 +462,7 @@ _entrypoint:
 	push ecx
 	push ecx
 	push sound_buffer
-	push test_sound_proc
+	push __4klang_render@4
 	push ecx
 	push ecx
 	call CreateThread
@@ -577,7 +592,7 @@ mainloop:
 
 	call ExitProcess
 
-%if 1
+%if 0
 section .ctstsnd code
 test_sound_proc:
 	nop
