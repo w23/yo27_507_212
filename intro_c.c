@@ -177,7 +177,7 @@ static /*__forceinline*/ void timelineUpdate(float tick, float *TV) {
 #pragma data_seg(".timeline_packed")
 #pragma code_seg(".timeline_updater")
 
-#if 0
+#if 1
 
 static double fsin(double in) {
 	double result;
@@ -718,6 +718,7 @@ void entrypoint(void) {
 	HWAVEOUT hWaveOut;
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)soundRender, sound_buffer, 0, 0);
 	//soundRender(sound_buffer);
+	//MMSYSERR_INVALHANDLE
 	CHECK(waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL));
 	CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 	CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));

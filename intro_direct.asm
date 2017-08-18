@@ -58,6 +58,7 @@ GL_COLOR_ATTACHMENT1 EQU 0x8ce1
 	WINAPI_FUNC CreateThread, 24
 	WINAPI_FUNC waveOutOpen, 24
 	WINAPI_FUNC waveOutWrite, 12
+	WINAPI_FUNC waveOutGetPosition, 12
 	WINAPI_FUNC ShowCursor, 4
 	WINAPI_FUNC CreateWindowExA, 48
 	WINAPI_FUNC GetDC, 4
@@ -569,7 +570,26 @@ init_progs:
 	;CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 %endif
 
+	push ebp
+	push ebp
+	push ebp
+	mov esi, signals
 mainloop:
+	mov ebx, esp
+	mov dword [ebx], 4
+	; waveOutGetPosition(hWaveOut, &mmtime, sizeof(mmtime))
+	push 12
+	push ebx
+	push ebp
+	call waveOutGetPosition
+	cmp dword [esp + 4], MAX_SAMPLES * 8
+	jge exit
+	mov dword [esp], SAMPLE_RATE * 8
+	fild dword [esp + 4]
+	fild dword [esp]
+	fdivp
+	fstp dword [esi]
+
 	paintPass prog_raymarch, fb_raymarch, 2
 	paintPass prog_reflect_blur, fb_reflect_blur, 1
 	paintPass prog_composite, fb_composite, 1
@@ -590,6 +610,7 @@ mainloop:
 	call GetAsyncKeyState
 	jz mainloop
 
+exit:
 	call ExitProcess
 
 %if 0
