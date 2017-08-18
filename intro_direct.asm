@@ -199,6 +199,7 @@ section .bsignals data
 signals:
 	times 32 dd 5.0
 
+%if 0
 section .bmamem bss
 main_mem:
 %macro declare_main_mem 0
@@ -228,6 +229,7 @@ declare_main_mem
 %define MEM(m) \
 	[ebp + m]
 %define MEMADDR(m) addr_ %+ m
+%endif
 
 %macro initTexture 6
 	push %1
