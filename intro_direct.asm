@@ -239,9 +239,9 @@ prog_composite EQU 3
 prog_dof EQU 4
 prog_post EQU 5
 
-section .bsignals data
+section .bsignals bss
 signals:
-	times 32 dd 5.0
+	resd 32 dd
 
 %if 0
 section .bmamem bss
