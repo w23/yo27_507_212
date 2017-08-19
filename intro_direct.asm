@@ -6,7 +6,7 @@ global _entrypoint
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
-%include "timeline.inc"
+;%include "timeline.inc"
 
 ;%include "4klang.inc"
 %define SAMPLE_RATE	44100
@@ -96,7 +96,7 @@ WINAPI_FUNCLIST
 	GL_FUNC glUseProgram
 	GL_FUNC glGetUniformLocation
 	GL_FUNC glUniform1iv
-	GL_FUNC glUniform1fv
+;	GL_FUNC glUniform1fv
 	GL_FUNC glGenFramebuffers
 	GL_FUNC glBindFramebuffer
 	GL_FUNC glFramebufferTexture2D
@@ -241,9 +241,11 @@ prog_composite EQU 3
 prog_dof EQU 4
 prog_post EQU 5
 
+%if 0
 section .bsignals bss
 signals:
 	resd 32
+%endif
 
 %if 0
 section .bmamem bss
@@ -379,6 +381,7 @@ declare_main_mem
 	push eax
 	call glUniform1iv
 
+%if 0
 	push signals
 	push 16
 	push F
@@ -386,6 +389,15 @@ declare_main_mem
 	call glGetUniformLocation
 	push eax
 	call glUniform1fv
+%else
+	push esi
+	push 1
+	push F
+	push %1
+	call glGetUniformLocation
+	push eax
+	call glUniform1iv
+%endif
 
 	push 1
 	push 1
@@ -575,6 +587,7 @@ init_progs:
 	push ebp
 	push ebp
 	push ebp
+	push ebp
 mainloop:
 	mov ebx, esp
 	mov dword [ebx], 4
@@ -587,13 +600,10 @@ mainloop:
 	cmp eax, MAX_SAMPLES * 8
 	jge exit
 
-	;xor edx, edx
-	;mov ebx, SAMPLE_RATE * 4 * 2 ; ???
-	;div ebx
-	shr eax, 5 ; to samples
+	mov dword [esp], eax
+	mov esi, esp
 
-	mov esi, signals
-
+%if 0
 %macro signal_read 3
 	xor ecx, ecx
 %%sigread_loop:
@@ -666,6 +676,7 @@ mainloop:
 	push eax
 	signal_read sig9_n, sig9_t, sig9_v
 	pop eax
+%endif
 %if 0
 	cmp dword [esp + 4], MAX_SAMPLES * 8
 	jge exit
