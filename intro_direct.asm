@@ -6,6 +6,8 @@ global _entrypoint
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
+%include "timeline.inc"
+
 ;%include "4klang.inc"
 %define SAMPLE_RATE	44100
 %define MAX_INSTRUMENTS	6
@@ -241,7 +243,7 @@ prog_post EQU 5
 
 section .bsignals bss
 signals:
-	resd 32 dd
+	resd 32
 
 %if 0
 section .bmamem bss
@@ -573,7 +575,6 @@ init_progs:
 	push ebp
 	push ebp
 	push ebp
-	mov esi, signals
 mainloop:
 	mov ebx, esp
 	mov dword [ebx], 4
@@ -582,6 +583,90 @@ mainloop:
 	push ebx
 	push ebp
 	call waveOutGetPosition
+	mov eax, dword [esp + 4]
+	cmp eax, MAX_SAMPLES * 8
+	jge exit
+
+	;xor edx, edx
+	;mov ebx, SAMPLE_RATE * 4 * 2 ; ???
+	;div ebx
+	shr eax, 5 ; to samples
+
+	mov esi, signals
+
+%macro signal_read 3
+	xor ecx, ecx
+%%sigread_loop:
+	movsx edx, byte [%3 + ecx]
+	inc ecx
+	movzx ebx, byte [%2 + ecx]
+	imul ebx, ebx, SAMPLES_PER_TICK
+	cmp eax, ebx
+	jl %%sigread_compute
+	sub eax, ebx
+	cmp ecx, %1
+	jl %%sigread_loop
+%%sigread_compute:
+	mov dword [esi], edx
+	fild dword [esi] ; ST(0) = v0
+	fld st0 ; v0, v0
+	movsx edx, byte [%3 + ecx]
+	mov dword [esi], edx
+	fild dword [esi] ; v1 v0 v0
+	fsubrp ; v1-v0 v0
+	mov dword [esi], eax
+	fild dword [esi] ; t-t0, v1-v0, v0
+	fmulp ; (t-t0)*(v1-v0), v0
+	mov dword [esi], ebx
+	fild dword [esi] ; (t1-t0), (t-t0)*(v1-v0), v0
+	fdivp ; (t-t0)*(v1-v0)/(t1-t0), v0
+	faddp ; v0 + (t-t0)*(v1-v0)/(t1-t0)
+	mov dword [esi], 4
+	fild dword [esi]
+	fdivp
+	fstp dword [esi]
+%endmacro
+
+	push eax
+	signal_read sig0_n, sig0_t, sig0_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig1_n, sig1_t, sig1_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig2_n, sig2_t, sig2_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig3_n, sig3_t, sig3_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig4_n, sig4_t, sig4_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig5_n, sig5_t, sig5_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig6_n, sig6_t, sig6_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig7_n, sig7_t, sig7_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig8_n, sig8_t, sig8_v
+	pop eax
+	add esi, 4
+	push eax
+	signal_read sig9_n, sig9_t, sig9_v
+	pop eax
+%if 0
 	cmp dword [esp + 4], MAX_SAMPLES * 8
 	jge exit
 	mov dword [esp], SAMPLE_RATE * 8
@@ -589,6 +674,7 @@ mainloop:
 	fild dword [esp]
 	fdivp
 	fstp dword [esi]
+%endif
 
 	paintPass prog_raymarch, fb_raymarch, 2
 	paintPass prog_reflect_blur, fb_reflect_blur, 1

@@ -41,8 +41,11 @@ t 0:0
 	lin 6 -5 16:0
 
 	set 7 0
+	lin 7 0 0:1
 	set 8 1
+	lin 8 1 0:1
 	set 9 1
+	lin 9 1 0:1
 
 	;lin 9 10 4:0
 t 8:0
