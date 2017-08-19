@@ -12,8 +12,8 @@ sig1_n EQU 3
 section .dsig1t data align=1
 sig1_t:
 	db 0
+	db 32
 	db 64
-	db 128
 section .dsig1v data align=1
 sig1_v:
 	db 28
@@ -23,8 +23,8 @@ sig2_n EQU 3
 section .dsig2t data align=1
 sig2_t:
 	db 0
+	db 32
 	db 64
-	db 128
 section .dsig2v data align=1
 sig2_v:
 	db 4
@@ -34,8 +34,8 @@ sig3_n EQU 3
 section .dsig3t data align=1
 sig3_t:
 	db 0
-	db 128
 	db 64
+	db 32
 section .dsig3v data align=1
 sig3_v:
 	db -40
@@ -45,7 +45,7 @@ sig4_n EQU 2
 section .dsig4t data align=1
 sig4_t:
 	db 0
-	db 64
+	db 32
 section .dsig4v data align=1
 sig4_v:
 	db 32
@@ -54,7 +54,7 @@ sig5_n EQU 2
 section .dsig5t data align=1
 sig5_t:
 	db 0
-	db 64
+	db 32
 section .dsig5v data align=1
 sig5_v:
 	db 4
@@ -63,8 +63,8 @@ sig6_n EQU 3
 section .dsig6t data align=1
 sig6_t:
 	db 0
-	db 128
 	db 64
+	db 32
 section .dsig6v data align=1
 sig6_v:
 	db -40
@@ -93,9 +93,9 @@ section .dsig9t data align=1
 sig9_t:
 	db 0
 	db 1
+	db 32
 	db 64
-	db 128
-	db 96
+	db 48
 section .dsig9v data align=1
 sig9_v:
 	db 4

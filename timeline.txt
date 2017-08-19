@@ -1,8 +1,8 @@
 bpm 60
-bar_ticks 8
+bar_ticks 4
 
 ; time = "bar:tick"
-preview_loop 16:0 24:0
+preview_loop 28:0 32:0
 
 ; set <row> <value>
 ; lin <row> <value_end> <time_end>
