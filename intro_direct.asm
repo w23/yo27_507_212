@@ -2,7 +2,7 @@ BITS 32
 global _entrypoint
 
 %define WIDTH 1280
-%define HEIGHT	720
+%define HEIGHT 720
 %define NOISE_SIZE 256
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
@@ -411,9 +411,9 @@ _entrypoint:
 	xor ecx, ecx
 
 %if 0
-	initTextureStack tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTextureStack tex_dof_far, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+5
-	initTextureStack tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTextureStack tex_dof_near, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+4
 	initTextureStack tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+3
@@ -558,10 +558,10 @@ init_textures:
 	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+4
 	call glActiveTexture
-	initTexture tex_dof_near, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_dof_near, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+5
 	call glActiveTexture
-	initTexture tex_dof_far, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_dof_far, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 
 init_fbs:
 	initFb fb_raymarch, tex_raymarch_primary, tex_raymarch_reflect
