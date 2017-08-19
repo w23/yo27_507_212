@@ -7,6 +7,7 @@ global _entrypoint
 %define NOISE_SIZE_BYTES (4 * NOISE_SIZE * NOISE_SIZE)
 
 ;%include "timeline.inc"
+%include "data.inc"
 
 ;%include "4klang.inc"
 %define SAMPLE_RATE	44100
@@ -220,15 +221,16 @@ draw_buffers:
 
 section .dsmplrs data
 samplers:
-	dd 0, 1, 2, 3, 4, 5, 6
+	dd 0, 1, 2, 3, 4, 5, 6, 7
 
 tex_noise EQU 1
-tex_raymarch_primary EQU 2
-tex_raymarch_reflect EQU 3
-tex_reflect_blur EQU 4
-tex_composite EQU 5
-tex_dof_near EQU 6
-tex_dof_far EQU 7
+tex_data EQU 2
+tex_raymarch_primary EQU 3
+tex_raymarch_reflect EQU 4
+tex_reflect_blur EQU 5
+tex_composite EQU 6
+tex_dof_near EQU 7
+tex_dof_far EQU 8
 
 fb_raymarch EQU 1
 fb_reflect_blur EQU 2
@@ -374,7 +376,7 @@ declare_main_mem
 	GLCHECK
 
 	push samplers
-	push 7
+	push 8
 	push S
 	push %1
 	call glGetUniformLocation
@@ -431,7 +433,7 @@ _entrypoint:
 	push 4
 	; glGenTextures
 	push dev_null
-	push 7
+	push 8
 	; SetPixelFormat
 	push pfd
 	; ChoosePixelFormat
@@ -546,20 +548,23 @@ init_textures:
 	initTexture tex_noise, NOISE_SIZE, NOISE_SIZE, GL_RGBA, GL_UNSIGNED_BYTE, noise
 	push GL_TEXTURE1
 	call glActiveTexture
-	initTexture tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_data, DATA_WIDTH, DATA_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, data_tex
 	push GL_TEXTURE1+1
 	call glActiveTexture
-	initTexture tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_raymarch_primary, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+2
 	call glActiveTexture
-	initTexture tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_raymarch_reflect, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+3
 	call glActiveTexture
-	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_reflect_blur, WIDTH/2, HEIGHT/2, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+4
 	call glActiveTexture
-	initTexture tex_dof_near, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	initTexture tex_composite, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 	push GL_TEXTURE1+5
+	call glActiveTexture
+	initTexture tex_dof_near, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
+	push GL_TEXTURE1+6
 	call glActiveTexture
 	initTexture tex_dof_far, WIDTH, HEIGHT, GL_RGBA16F, GL_FLOAT, 0
 
