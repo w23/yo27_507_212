@@ -543,7 +543,7 @@ void entrypoint(void) {
 	//CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 	CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 #else
-#if 0
+#if 1
 	_4klang_render(sound_buffer);
 	FILE *f = fopen("sound.raw", "wb");
 	fwrite(sound_buffer, 1, sizeof(sound_buffer), f);
