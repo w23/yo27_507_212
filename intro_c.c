@@ -77,18 +77,19 @@ int _fltused = 1;
 #endif
 #define LOL(x) #x
 #define STR(x) LOL(x)
-static const char *FFMPEG_CAPTURE_INPUT = "ffmpeg.exe"
+static const char *FFMPEG_CAPTURE_INPUT = "C:\\Users\\me\\Downloads\\ffmpeg-3.3.3-win64-static\\bin\\ffmpeg.exe"
 " -y -f rawvideo -vcodec rawvideo"
 " -s "STR(XRES) "x" STR(YRES) " -pix_fmt rgb24"
 " -framerate " STR(CAPTURE_FRAMERATE)
 " -i -"
-" -f f32le -ar 44100 -ac 2 -acodec rawaudio"
+" -f f32le -ar 44100 -ac 2"
 " -i sound.raw"
-" -c:a libfdk_aac -b:a 128k"
+" -c:a aac -b:a 160k"
 " -c:v libx264 "//-crf 18 -preset slow -vf vflip "
-" -level 4.1 -preset placebo -crf 21.0 -keyint 600 -bframes 3 -scenecut 60"
-" -ref 3 -qpmin 10 -qpstep 8 -vbv-bufsize 24000 -vbv-maxrate 24000 -merange 32"
-"capture_" STR(XRES) "x" STR(YRES) ".mp4"
+" -level 4.1 -preset placebo -crf 21.0"
+" -x264-params keyint=600:bframes=3:scenecut=60:"
+"ref=3:qpmin=10:qpstep=8:vbv-bufsize=24000:vbv-maxrate=24000:merange=32"
+" capture_" STR(XRES) "x" STR(YRES) ".mp4"
 ;
 #endif
 
@@ -478,7 +479,12 @@ void checkResult(int result) {
 #endif
 
 #pragma code_seg(".entry")
+#ifdef CAPTURE
+int main(int argc, char * argv[]) {
+	(void)argc; (void)argv;
+#else
 void entrypoint(void) {
+#endif
 #ifdef FULLSCREEN
 	ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 	ShowCursor(0);
@@ -510,10 +516,10 @@ void entrypoint(void) {
 	introInit();
 
 #ifdef CAPTURE
-	AllocConsole();
-	freopen("CONIN$", "r", stdin);
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONOUT$", "w", stderr);
+	//AllocConsole();
+	//freopen("CONIN$", "r", stdin);
+	//freopen("CONOUT$", "w", stdout);
+	//freopen("CONOUT$", "w", stderr);
 
 	FILE* captureStream = _popen(FFMPEG_CAPTURE_INPUT, "wb");
 	if (!captureStream) {
@@ -537,10 +543,12 @@ void entrypoint(void) {
 	//CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 	CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 #else
+#if 0
 	_4klang_render(sound_buffer);
 	FILE *f = fopen("sound.raw", "wb");
 	fwrite(sound_buffer, 1, sizeof(sound_buffer), f);
 	fclose(f);
+#endif
 #endif
 #else
 	const int start = timeGetTime();
@@ -585,6 +593,7 @@ void entrypoint(void) {
 
 #ifdef CAPTURE
 	fclose(captureStream);
+	return 0;
 #endif
 
 	ExitProcess(0);
