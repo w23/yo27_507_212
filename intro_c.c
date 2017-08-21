@@ -69,38 +69,7 @@ int _fltused = 1;
 
 #include "glext.h"
 
-#ifdef OLD_4KLANG
-//#include "music/4klang.h"
-#define SAMPLE_RATE 44100
-#define BPM 92.000000
-#define MAX_INSTRUMENTS 8
-#define MAX_PATTERNS 49
-#define PATTERN_SIZE_SHIFT 4
-#define PATTERN_SIZE (1 << PATTERN_SIZE_SHIFT)
-#define MAX_TICKS (MAX_PATTERNS*PATTERN_SIZE)
-#define SAMPLES_PER_TICK 7190
-#define MAX_SAMPLES (SAMPLES_PER_TICK*MAX_TICKS)
-#define POLYPHONY 2
-#define FLOAT_32BIT
-#define SAMPLE_TYPE float
-#define INTRO_LENGTH (1000ull * MAX_SAMPLES / SAMPLE_RATE)
-#endif
-
-#define SOUND_SAMPLERATE 44100
-#define BPM 160
-#define BAR_TICKS 32
-#define SAMPLES_PER_BAR (SOUND_SAMPLERATE * 4 * 60 / BPM)
-#define SAMPLES_PER_TICK (SAMPLES_PER_BAR / BAR_TICKS)
-#define MS_PER_TICK (SAMPLES_PER_TICK * 1000 / SOUND_SAMPLERATE)
-#define LENGTH_BARS 32
-
-#define SOUND_SAMPLES (SAMPLES_PER_BAR * LENGTH_BARS)
-#define SAMPLE_TYPE float
-#define FLOAT_32BIT
-
-#define BYTES_PER_SAMPLE sizeof(SAMPLE_TYPE)
-#define BYTES_PER_TICK (BYTES_PER_SAMPLE * SAMPLES_PER_TICK)
-#define LENGTH_TICKS (LENGTH_BARS * BAR_TICKS)
+#include "4klang.h"
 
 #ifdef CAPTURE
 #ifndef CAPTURE_FRAMERATE
@@ -108,10 +77,19 @@ int _fltused = 1;
 #endif
 #define LOL(x) #x
 #define STR(x) LOL(x)
-#define FFMPEG_CAPTURE_INPUT "ffmpeg.exe -y -f rawvideo -vcodec rawvideo -s "\
-	STR(XRES) "x" STR(YRES) " -pix_fmt rgb24 -framerate " STR(CAPTURE_FRAMERATE)\
-	" -i - -c:v libx264 -crf 18 -preset slow -vf vflip "\
-	"capture_" STR(XRES) "x" STR(YRES) ".mp4"
+static const char *FFMPEG_CAPTURE_INPUT = "ffmpeg.exe"
+" -y -f rawvideo -vcodec rawvideo"
+" -s "STR(XRES) "x" STR(YRES) " -pix_fmt rgb24"
+" -framerate " STR(CAPTURE_FRAMERATE)
+" -i -"
+" -f f32le -ar 44100 -ac 2 -acodec rawaudio"
+" -i sound.raw"
+" -c:a libfdk_aac -b:a 128k"
+" -c:v libx264 "//-crf 18 -preset slow -vf vflip "
+" -level 4.1 -preset placebo -crf 21.0 -keyint 600 -bframes 3 -scenecut 60"
+" -ref 3 -qpmin 10 -qpstep 8 -vbv-bufsize 24000 -vbv-maxrate 24000 -merange 32"
+"capture_" STR(XRES) "x" STR(YRES) ".mp4"
+;
 #endif
 
 #pragma data_seg(".raymarch.glsl")
@@ -134,10 +112,6 @@ int _fltused = 1;
 
 #define NOISE_SIZE 256
 static unsigned char noise_bytes[4 * NOISE_SIZE * NOISE_SIZE];
-
-//#define OLD_TIMELINE
-#define NUM_SIGNALS 32
-static float signal[NUM_SIGNALS];
 
 #ifdef OLD_TIMELINE
 #pragma data_seg(".timeline.h")
@@ -173,184 +147,7 @@ static /*__forceinline*/ void timelineUpdate(float tick, float *TV) {
 	}
 	//pritnf("\n");
 }
-#else
-#pragma data_seg(".timeline_packed")
-#pragma code_seg(".timeline_updater")
-
-#if 1
-
-static double fsin(double in) {
-	double result;
-	_asm { fld in
-		fsin
-		fstp result
-	}
-	return result;
-}
-
-static float fract(float f) {
-	int i;
-	_asm {
-		fld f
-		fisttp i
-	}
-	return f - (float)i;
-}
-
-static float fmod(float f, float d) {
-	return fract(f / d) * d;
-}
-
-#undef max
-#undef min
-static float max(float a, float b) { return a > b ? a : b; }
-static float min(float a, float b) { return a < b ? a : b; }
-
-static float clamp(float f, float m, float M) {
-	return max(min(f, M), m);
-}
-
-#define COUNTOF(a) (sizeof(a) / sizeof(*a))
-
-static const char bass_notes[] = {20, 19};
-
-static const char kicks[] = {
-	1, 0, 0, 0, 
-	0, 1, 0, 0, 
-	1, 0, 0, 0, 
-	0, 0, 0, 0, 
-	1, 0, 0, 0, 
-	0, 1, 0, 0, 
-	1, 0, 0, 0, 
-	0, 0, 1, 0 };
-
-static void timelineUpdate(float tick, float *S) {
-	const int itick = tick;
-	const int ibar = itick / BAR_TICKS;
-
-	const float scene1 = clamp((tick - BAR_TICKS) / BAR_TICKS, 0.f, 1.f);
-	const float scene2 = clamp((tick - 2.f * BAR_TICKS) / BAR_TICKS, 0.f, 1.f);
-
-	S[0] = tick;
-	S[1] = 1.f + 10.f * noise_bytes[ibar % NOISE_SIZE] / 255.f;
-	S[2] = scene1;
-	S[3] = scene2 * fmod(tick, BAR_TICKS) / BAR_TICKS;
-	//S[11] = fmod(tick*256., 3.);
-	S[10] = kicks[(itick / 4) % COUNTOF(kicks)];
-	S[11] = (itick % BAR_TICKS) != (BAR_TICKS - 1);
-	S[12] = bass_notes[(ibar / 4) % COUNTOF(bass_notes)] - 15;
-	S[13] = (itick + 16) % BAR_TICKS == 0;
-	S[14] = 36;
-}
-#else
-static void timelineUpdate(float tick, float *S) {
-	for (int i = 0; i < 16; ++i)
-		S[i] = 5.f;
-}
 #endif
-
-#endif
-
-#ifdef SOUND
-#pragma data_seg(".wavedata")
-static SAMPLE_TYPE sound_buffer[SOUND_SAMPLES];
-
-static float padd(float f, float a) { return fract(f + a); }
-
-static float step(float f, float s) { return f > s;  }
-static float psine(float f) { return fsin(f * 3.141693f * 2.f); }
-static float noise() {
-	static unsigned seed = 0;
-	seed = 1013904223ul + seed * 1664525ul;
-	return (seed >> 18) / (float)(0x3fff);
-}
-static float mix(float a, float b, float t) { return a + t * (b - a); }
-static float ptri(float v, float p) {
-	return ((v < p) ? 1.f - v / p : (v - p) / (1.f - p)) * 2.f - 1.f;
-}
-
-static float ntodp(float n) {
-	if (n < 0 || n > 64) return 0;
-	const float kht = 1.059463f;
-	float f = 55.5f / 2.f / SOUND_SAMPLERATE;
-	while ((n -= 1.f) >= 0.f) f *= kht;
-	return f;
-	//return powf(2.f, (stack[sp] - 57.f) / 12.f) * 440.f / context->samplerate;
-}
-
-typedef struct Voice {
-	int gate_signal, note_signal;
-	float (*gen)(struct Voice *v, float *S);
-	float p, dp;
-	float env, attack, decay;
-	float note;
-	float last_gatesig;
-	float gatetime;
-	float p1, dp1;
-} Voice;
-
-static float bass(Voice *v, float *S) {
-	v->dp1 = .1f / SOUND_SAMPLERATE;
-	return clamp(1.7 * ptri(v->p, psine(v->p1) * .3 + .5), -8., .8) * .5;
-}
-
-static float kick(Voice *v, float *S) {
-	float gt2 = v->gatetime; gt2 *= gt2;
-	v->dp = clamp(.0008f / (1.f - gt2), .0001f, .1f);
-	return ((psine(v->p) + ptri(v->p, .2)) * 2. + .08 * noise()) * v->gatetime;
-}
-
-static float snare(Voice *v, float *S) {
-	return (.5 * ptri(v->p, .5) * v->gatetime + noise()) * v->gatetime * v->gatetime;
-}
-
-void soundRender() {
-	float S[NUM_SIGNALS];
-	float kick_phase = 0;
-	float kgate = 0;
-	float ps10 = 0;
-
-	float bdp = ntodp(12.f);
-
-	Voice voices[] = {
-		{11, 12, bass},
-		{10, 0, kick},
-		{13, 14, snare}
-	};
-
-	for (int i = 0; i < SOUND_SAMPLES; ++i) {
-		const float tick = (float)i / (float)SAMPLES_PER_TICK;
-		timelineUpdate(tick, S);
-		float s = 0;
-
-		for (int j = 0; j < COUNTOF(voices); ++j) {
-			Voice *v = voices + j;
-			if (v->note_signal) v->dp = ntodp(S[v->note_signal]);
-			v->p = fract(v->p + v->dp);
-			v->p1 = fract(v->p1 + v->dp1);
-			s += v->gen(v, S);
-			const float gate = S[v->gate_signal];
-			if (gate > 0 && v->last_gatesig == 0) {
-				v->gatetime = 1.f;
-			} else {
-				v->gatetime -= .25f / SAMPLES_PER_TICK;
-				v->gatetime = max(v->gatetime, 0);
-			}
-
-			v->last_gatesig = S[v->gate_signal];
-		}
-
-		int delay = 20 * SAMPLES_PER_TICK;
-		if (i > delay) {
-			//s += .2 * sound_buffer[i - delay];
-		}
-
-		sound_buffer[i] = s;
-
-		//sound_buffer[i] = signals[10] * (i % (44100 / 440)) / (float)(44100 / 440);
-	}
-}
-#endif // SOUND
 
 #ifdef NO_CREATESHADERPROGRAMV
 FUNCLIST_DO(PFNGLCREATESHADERPROC, CreateShader) \
@@ -383,9 +180,8 @@ FUNCLIST_DO(PFNGLLINKPROGRAMPROC, LinkProgram)
 
 #define FUNCLISTS FUNCLIST FUNCLIST_DBG
 
-#ifdef OLD_4KLANG
-static SAMPLE_TYPE lpSoundBuffer[MAX_SAMPLES * 2];
-#endif
+#pragma bss_seg(".sound_buffer")
+static SAMPLE_TYPE sound_buffer[MAX_SAMPLES * 2];
 
 enum {
 	Pass_Raymarch,
@@ -403,15 +199,21 @@ enum {
 	Tex_COUNT
 };
 
+#pragma data_seg(".samplers")
 const static GLuint samplers[Tex_COUNT] = {
 	0, 1, 2, 3, 4, 5, 6
 };
+
+#pragma data_seg(".draw_buffers")
 const static GLuint draw_buffers[2] = {
 	GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1
 };
 
+#pragma bss_seg(".program")
 static GLuint program[Pass_COUNT];
+#pragma bss_seg(".texture")
 static GLuint texture[Tex_COUNT];
+#pragma bss_seg(".fb")
 static GLuint fb[Pass_COUNT - 1];
 
 #ifdef CAPTURE
@@ -425,6 +227,7 @@ static const char gl_names[] =
 FUNCLISTS
 "\0";
 
+#pragma data_seg(".gl_procs")
 #undef FUNCLIST_DO
 #define FUNCLIST_DO(T,N) T N;
 static struct {
@@ -461,10 +264,10 @@ static const WAVEFORMATEX WaveFMT =
 #else
 	WAVE_FORMAT_PCM,
 #endif
-	1,                                   // channels
-	SOUND_SAMPLERATE,                         // samples per sec
-	SOUND_SAMPLERATE * sizeof(SAMPLE_TYPE), // bytes per sec
-	sizeof(SAMPLE_TYPE),             // block alignment;
+	2,                                   // channels
+	SAMPLE_RATE,                         // samples per sec
+	SAMPLE_RATE * 2 * sizeof(SAMPLE_TYPE), // bytes per sec
+	sizeof(SAMPLE_TYPE) * 2,             // block alignment;
 	sizeof(SAMPLE_TYPE) * 8,             // bits per sample
 	0                                    // extension not needed
 };
@@ -472,7 +275,7 @@ static const WAVEFORMATEX WaveFMT =
 #pragma data_seg(".wavehdr")
 static WAVEHDR WaveHDR =
 {
-	(LPSTR)sound_buffer, SOUND_SAMPLES*sizeof(SAMPLE_TYPE),0,0,0,0,0,0
+	(LPSTR)sound_buffer, MAX_SAMPLES * 2 * sizeof(SAMPLE_TYPE),0,0,WHDR_PREPARED,0,0,0
 };
 
 #endif // SOUND
@@ -582,7 +385,7 @@ static /*__forceinline*/ void initFb(GLuint fb, GLuint tex1, GLuint tex2) {
 	GLCHECK();
 }
 
-static float signals[NUM_SIGNALS];
+int itime;
 
 #pragma code_seg(".paint")
 static void paint(GLuint prog, GLuint dst_fb, int out_bufs) {
@@ -596,7 +399,7 @@ static void paint(GLuint prog, GLuint dst_fb, int out_bufs) {
 	GLCHECK();
 	oglUniform1iv(oglGetUniformLocation(prog, "S"), Tex_COUNT, samplers);
 	glGetError();
-	oglUniform1fv(oglGetUniformLocation(prog, "F"), NUM_SIGNALS, signals);
+	oglUniform1iv(oglGetUniformLocation(prog, "F"), 1, &itime);
 	glGetError();
 #if defined(CAPTURE) && defined(TILED)
 	{
@@ -640,9 +443,9 @@ static __forceinline void introInit() {
 	oglActiveTexture(GL_TEXTURE4);
 	initTexture(texture[Tex_Combined], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
 	oglActiveTexture(GL_TEXTURE5);
-	initTexture(texture[Tex_DofNear], XRES/2, YRES/2, GL_RGBA16F, GL_FLOAT, 0);
+	initTexture(texture[Tex_DofNear], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
 	oglActiveTexture(GL_TEXTURE6);
-	initTexture(texture[Tex_DofFar], XRES/2, YRES/2, GL_RGBA16F, GL_FLOAT, 0);
+	initTexture(texture[Tex_DofFar], XRES, YRES, GL_RGBA16F, GL_FLOAT, 0);
 
 	initFb(fb[Pass_Raymarch], texture[Tex_RaymarchPrimary], texture[Tex_RaymarchReflect]);
 	initFb(fb[Pass_ReflectBlur], texture[Tex_ReflectBlur], 0);
@@ -657,9 +460,7 @@ static __forceinline void introInit() {
 }
 
 #pragma code_seg(".introPaint")
-static __forceinline void introPaint(float time_tick) {
-	timelineUpdate(time_tick, signals);
-	signals[0] = time_tick / BAR_TICKS;
+static __forceinline void introPaint() {
 	paint(program[Pass_Raymarch], fb[Pass_Raymarch], 2);
 	paint(program[Pass_ReflectBlur], fb[Pass_ReflectBlur], 1);
 	paint(program[Pass_ReflectCombine], fb[Pass_ReflectCombine], 1);
@@ -708,41 +509,71 @@ void entrypoint(void) {
 
 	introInit();
 
+#ifdef CAPTURE
+	AllocConsole();
+	freopen("CONIN$", "r", stdin);
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+
+	FILE* captureStream = _popen(FFMPEG_CAPTURE_INPUT, "wb");
+	if (!captureStream) {
+		*(int*)0 = 0;
+	}
+#endif
+
 #ifdef SOUND
 #ifdef _DEBUG
 #define CHECK(f) checkResult(f)
 #else
 #define CHECK(f) (f)
 #endif
+#ifndef CAPTURE
 	// initialize sound
 	HWAVEOUT hWaveOut;
-	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)soundRender, sound_buffer, 0, 0);
+	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)_4klang_render, sound_buffer, 0, 0);
 	//soundRender(sound_buffer);
 	//MMSYSERR_INVALHANDLE
 	CHECK(waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL));
-	CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
+	//CHECK(waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
 	CHECK(waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR)));
+#else
+	_4klang_render(sound_buffer);
+	FILE *f = fopen("sound.raw", "wb");
+	fwrite(sound_buffer, 1, sizeof(sound_buffer), f);
+	fclose(f);
+#endif
 #else
 	const int start = timeGetTime();
 #endif
 
 	// play intro
 	do {
+#ifndef CAPTURE
 #ifdef SOUND
 		MMTIME mmtime;
 		mmtime.wType = TIME_BYTES;
 		CHECK(waveOutGetPosition(hWaveOut, &mmtime, sizeof(mmtime)));
-		const float time_ticks = (float)mmtime.u.cb / (BYTES_PER_TICK);
+		itime = mmtime.u.cb;
+		//const float time_ticks = (float)mmtime.u.cb / (BYTES_PER_TICK);
 #else
-		const float time_ticks = (timeGetTime() - start) / MS_PER_TICK;
+		//const float time_ticks = (timeGetTime() - start) / MS_PER_TICK;
+#endif
+#else
+		itime += sizeof(SAMPLE_TYPE) * 2 * SAMPLE_RATE / CAPTURE_FRAMERATE;
 #endif
 
-		introPaint(time_ticks);
+		introPaint();
 		SwapBuffers(hDC);
+
+#ifdef CAPTURE
+		glReadPixels(0, 0, XRES, YRES, GL_RGB, GL_UNSIGNED_BYTE, backbufferData);
+		fwrite(backbufferData, 1, XRES*YRES * 3, captureStream);
+		fflush(captureStream);
+#endif
 
 		/* hide cursor properly */
 		PeekMessageA(0, 0, 0, 0, PM_REMOVE);
-		if (time_ticks >= LENGTH_TICKS) break;
+		if (itime >= MAX_SAMPLES * 2 * sizeof(SAMPLE_TYPE)) break;
 	} while (!GetAsyncKeyState(VK_ESCAPE));
 		// && MMTime.u.sample < MAX_SAMPLES);
 

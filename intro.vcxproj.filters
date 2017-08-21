@@ -42,6 +42,9 @@
     <ClInclude Include="header_fixed.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="4klang.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="timeline.seq" />
@@ -78,10 +81,18 @@
     <CustomBuild Include="*.glsl" />
     <CustomBuild Include="*.glsl" />
     <CustomBuild Include="blur_reflection.glsl" />
+    <CustomBuild Include="4klang.asm">
+      <Filter>Файлы исходного кода</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="intro_c.c">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="4klang.inc">
+      <Filter>Заголовочные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>
