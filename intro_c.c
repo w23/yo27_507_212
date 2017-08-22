@@ -85,10 +85,13 @@ static const char *FFMPEG_CAPTURE_INPUT = "C:\\Users\\me\\Downloads\\ffmpeg-3.3.
 " -f f32le -ar 44100 -ac 2"
 " -i sound.raw"
 " -c:a aac -b:a 160k"
-" -c:v libx264 "//-crf 18 -preset slow -vf vflip "
-" -level 4.1 -preset placebo -crf 21.0"
-" -x264-params keyint=600:bframes=3:scenecut=60:"
-"ref=3:qpmin=10:qpstep=8:vbv-bufsize=24000:vbv-maxrate=24000:merange=32"
+" -c:v libx264 -vf vflip"//-crf 18 -preset slow -vf vflip "
+" -level:v 4.2 -profile:v high -preset slower"
+" -movflags +faststart"
+" -crf 20.0"
+" -pix_fmt yuv420p"
+//" -level 4.1 -preset placebo -crf 21.0"
+//" -x264-params keyint=600:bframes=3:scenecut=60:ref=3:qpmin=10:qpstep=8:vbv-bufsize=24000:vbv-maxrate=24000:merange=32"
 " capture_" STR(XRES) "x" STR(YRES) ".mp4"
 ;
 #endif
@@ -567,7 +570,9 @@ void entrypoint(void) {
 		//const float time_ticks = (timeGetTime() - start) / MS_PER_TICK;
 #endif
 #else
-		itime += sizeof(SAMPLE_TYPE) * 2 * SAMPLE_RATE / CAPTURE_FRAMERATE;
+		static int frame = 0;
+		//const int frames = MAX_SAMPLES * CAPTURE_FRAMERATE / SAMPLE_RATE;
+		itime = sizeof(SAMPLE_TYPE) * 2 * SAMPLE_RATE * frame++ / CAPTURE_FRAMERATE;
 #endif
 
 		introPaint();
