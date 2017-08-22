@@ -63,8 +63,9 @@ int _fltused = 1;
 #define oglFramebufferTexture2D glFramebufferTexture2D
 #define oglUseProgram glUseProgram
 #define oglGetUniformLocation glGetUniformLocation
-#define oglUniform1i glUniform1i
-#define oglUniform3f glUniform3f
+#define oglUniform1iv glUniform1iv
+#define oglDrawBuffers glDrawBuffers
+#define oglActiveTexture glActiveTexture
 #endif
 
 #include "glext.h"
@@ -202,7 +203,7 @@ enum {
 };
 
 #pragma data_seg(".samplers")
-const static GLuint samplers[Tex_COUNT] = {
+const static GLint samplers[Tex_COUNT] = {
 	0, 1, 2, 3, 4, 5, 6
 };
 
@@ -617,7 +618,7 @@ static void audioPlay(void *userdata, Uint8 *stream, int len) {
 	len /= sizeof(short);
 	for (i = 0; i < len; ++i) {
 		audio_cursor = (audio_cursor + 1) % (MAX_SAMPLES * 2);
-		p[i] = lpSoundBuffer[audio_cursor] * 32767.f;
+		p[i] = sound_buffer[audio_cursor] * 32767.f;
 	}
 }
 
@@ -631,7 +632,7 @@ void _start() {
 #endif
 #ifndef NO_AUDIO
 	pthread_t audio_thread;
-	pthread_create(&audio_thread, 0, (void *(*)(void*))__4klang_render, lpSoundBuffer);
+	pthread_create(&audio_thread, 0, (void *(*)(void*))__4klang_render, sound_buffer);
 	//__4klang_render(lpSoundBuffer);
 #endif
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -639,6 +640,8 @@ void _start() {
 #undef FULLSCREEN
 #define FULLSCREEN SDL_FULLSCREEN
 	SDL_ShowCursor(0);
+#else
+#define FULLSCREEN 0
 #endif
 	SDL_SetVideoMode(XRES, YRES, 32, SDL_OPENGL | FULLSCREEN);
 	glViewport(0, 0, XRES, YRES);
@@ -651,7 +654,7 @@ void _start() {
 #endif
 	const uint32_t start = SDL_GetTicks();
 	for(;;) {
-		const uint32_t now = SDL_GetTicks();
+		const uint32_t now = SDL_GetTicks() - start;
 #else
 	const uint32_t global_start = SDL_GetTicks();
 	const uint32_t start = 0;
@@ -663,8 +666,10 @@ void _start() {
 #endif
 		SDL_Event e;
 		SDL_PollEvent(&e);
-		if ((e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) || now >= INTRO_LENGTH) break;
-		introPaint((now - start) / 1000.f);
+		if ((e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+			|| now >= (MAX_SAMPLES * 1000ull / SAMPLE_RATE)) break;
+		itime = now * sizeof(SAMPLE_TYPE) * 2ull * SAMPLE_RATE / 1000;
+		introPaint();
 
 #ifdef CAPTURE
 		const uint32_t frame_end = SDL_GetTicks();
