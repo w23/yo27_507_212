@@ -1,8 +1,8 @@
 // some useful song defines for 4klang
 #define SAMPLE_RATE 44100
 #define BPM 120.000000
-#define MAX_INSTRUMENTS 12
-#define MAX_PATTERNS 92
+#define MAX_INSTRUMENTS 9
+#define MAX_PATTERNS 59
 #define PATTERN_SIZE_SHIFT 4
 #define PATTERN_SIZE (1 << PATTERN_SIZE_SHIFT)
 #define MAX_TICKS (MAX_PATTERNS*PATTERN_SIZE)

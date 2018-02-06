@@ -1,6 +1,7 @@
 BITS 32
 global _entrypoint
 
+%define AUDIO_THREAD
 %define WIDTH 1280
 %define HEIGHT 720
 %define NOISE_SIZE 256
@@ -58,7 +59,9 @@ GL_COLOR_ATTACHMENT1 EQU 0x8ce1
 %ifdef FULLSCREEN
 	WINAPI_FUNC ChangeDisplaySettingsA, 8
 %endif
+%ifdef AUDIO_THREAD
 	WINAPI_FUNC CreateThread, 24
+%endif
 	WINAPI_FUNC waveOutOpen, 24
 	WINAPI_FUNC waveOutWrite, 12
 	WINAPI_FUNC waveOutGetPosition, 12
@@ -476,6 +479,7 @@ _entrypoint:
 %endif
 
 ;	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)soundRender, sound_buffer, 0, 0);
+%ifdef AUDIO_THREAD
 	push ecx
 	push ecx
 	push sound_buffer
@@ -483,6 +487,10 @@ _entrypoint:
 	push ecx
 	push ecx
 	call CreateThread
+%else
+	push sound_buffer
+	call __4klang_render@4
+%endif
 
 generate_noise:
 	; expects ecx zero
