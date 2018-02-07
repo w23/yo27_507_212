@@ -607,6 +607,10 @@ void entrypoint(void) {
 #include <SDL.h>
 #include <pthread.h>
 
+#ifdef CAPTURE
+#define NO_AUDIO
+#endif
+
 #ifndef NO_AUDIO
 void __4klang_render(void*);
 
@@ -656,19 +660,18 @@ void _start() {
 	for(;;) {
 		const uint32_t now = SDL_GetTicks() - start;
 #else
+	const uint32_t total_frames = CAPTURE_FRAMERATE * MAX_SAMPLES / SAMPLE_RATE;
 	const uint32_t global_start = SDL_GetTicks();
-	const uint32_t start = 0;
-	const uint32_t total_frames = INTRO_LENGTH * CAPTURE_FRAMERATE / 1000;
 	uint32_t frame_start = SDL_GetTicks();
 	int frame = 0;
 	for (;;) {
-		const uint32_t now = ((frame++) * 1000.f) / CAPTURE_FRAMERATE;
+		//const int frames = MAX_SAMPLES * CAPTURE_FRAMERATE / SAMPLE_RATE;
+		itime = sizeof(SAMPLE_TYPE) * 2 * SAMPLE_RATE * frame++ / CAPTURE_FRAMERATE;
 #endif
 		SDL_Event e;
 		SDL_PollEvent(&e);
 		if ((e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
-			|| now >= (MAX_SAMPLES * 1000ull / SAMPLE_RATE)) break;
-		itime = now * sizeof(SAMPLE_TYPE) * 2ull * SAMPLE_RATE / 1000;
+			|| (itime >= MAX_SAMPLES * 2 * sizeof(SAMPLE_TYPE))) break;
 		introPaint();
 
 #ifdef CAPTURE
